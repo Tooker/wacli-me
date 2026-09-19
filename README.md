@@ -87,7 +87,8 @@ Without a sync daemon the store only holds what was fetched during the last run.
 
 ## License
 
-MIT, see [LICENSE](LICENSE). wacli itself is a separate MIT project — this repository only drives it.
+MIT, see [LICENSE](LICENSE). `site/assets/qrcode.min.js` is Kazuhiko Arase's
+[qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator), vendored unchanged (MIT). wacli itself is a separate MIT project — this repository only drives it.
 
 Linking an account uses an unofficial WhatsApp client. That is against WhatsApp's terms of service,
 and Meta may block a number for it. Run it on accounts you own, and tell your users the same.
