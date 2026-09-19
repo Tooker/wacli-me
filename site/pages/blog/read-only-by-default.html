@@ -1,7 +1,7 @@
-<!--meta {"title":"Why sending is off by default — wacli.me","description":"A tool an assistant cannot see is a tool it cannot call by mistake. Why write access is a separate switch.","nav":"blog"}-->
+<!--meta {"title":"Why sending is a switch, not a setting — wacli.me","description":"A tool an assistant cannot see is a tool it cannot call by mistake. Why write access is decided once, at link time.","nav":"blog"}-->
 <div class="hero">
-    <h1 class="page">Why sending is off by default</h1>
-    <p class="post-meta">build notes</p>
+    <h1 class="page">Why sending is a switch, not a setting</h1>
+    <p class="post-meta">build notes · updated 19 September 2026</p>
   </div>
 
   <section>
@@ -22,17 +22,27 @@
 
       <p>Underneath, reads go one step further and run the CLI with its own read-only guard, which refuses anything that would write to WhatsApp or mutate the store. Two independent mechanisms, one intent.</p>
 
-      <h3>Then why have it at all?</h3>
+      <h3>The default changed, and this note changed with it</h3>
 
-      <p>Because “message Tom that I'm twenty minutes late” is genuinely the best part, and refusing to build it would be posturing. It is a switch — per account, enabled on request, with the reasons stated plainly on <a href="/security">the security page</a> rather than buried in a tooltip.</p>
+      <p>This post used to be called <em>Why sending is off by default</em>, and it described a flow where you linked an account read-only and asked for write access afterwards. On 18 September 2026 that default flipped: the checkbox on <a href="/connect">the linking page</a> now starts ticked, and unchecking it links the account read-only.</p>
 
-      <p>The same reasoning draws the line at the other end. <code>check_numbers_on_whatsapp</code> only reads, but it reads by asking WhatsApp about a stranger's number, which is a small act of reconnaissance and a plausible enumeration tool. It sits behind the same switch. So does marking a chat read, because read receipts are visible to the other person: quietly telling someone you have seen their message is a side effect on their screen, not yours.</p>
+      <p>The honest reason is that the old default was not protecting anyone. It produced accounts that could not do the one thing their owner had linked them for, followed by a request to turn it on — a request nobody evaluates carefully on the second attempt. A decision you make while looking at a checkbox, before scanning a code, is a real decision. A decision you make because something is broken is not.</p>
+
+      <p>What did not change is the part that carries the guarantee: write access is fixed when you link, it is per account, and declining it leaves you with the thirteen read tools and no write tools in the list at all. The switch is the same switch. Only its starting position moved, to the place where you can actually see it.</p>
+
+      <blockquote>A default is a guess about what you want. A switch you tick before scanning is an answer.</blockquote>
+
+      <h3>What sits behind the switch</h3>
+
+      <p>More than sending. <code>check_numbers_on_whatsapp</code> only reads, but it reads by asking WhatsApp about a stranger's number, which is a small act of reconnaissance and a plausible enumeration tool. Marking a chat read sends a read receipt, so quietly telling someone you have seen their message is a side effect on their screen, not yours. Reactions are visible to everyone in the chat.</p>
 
       <blockquote>If a tool changes what someone else sees, it belongs behind the write switch — even when it technically only reads.</blockquote>
 
       <h3>What stays off entirely</h3>
 
       <p>Bulk sending is not a feature that will appear later. It is what gets numbers banned, it is what makes this category of tool a nuisance, and it is on the <a href="/roadmap">not-planned list</a> for both reasons. The write switch exists for conversations, not campaigns.</p>
+
+      <p>If you are evaluating this on an account you care about: link it with the box unchecked, live with thirteen read tools for a week, and ask for write access afterwards — the flag flips on your account, no relinking and no new token. That is still the advice, and it is still the thing we would do.</p>
 
       <div class="next-prev">
         <span><a href="/blog/isolation-by-construction">← Isolation by construction</a></span>
