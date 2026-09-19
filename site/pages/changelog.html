@@ -11,7 +11,16 @@
     <div class="timeline">
 
       <div class="entry">
-        <h3>0.2.0 — link it yourself <span class="pill live">current</span></h3>
+        <h3>0.2.1 — the source goes public <span class="pill live">current</span></h3>
+        <ul>
+          <li>The gateway is on GitHub under MIT: <a href="https://github.com/wacli-me/wacli-me">github.com/wacli-me/wacli-me</a> — server, linking flow, OAuth, deploy scripts and this website's sources.</li>
+          <li>Fixed: a malformed percent-encoded path such as <code>/%</code> raised a decoding error out of the request handler and ended the process. It now answers <code>400</code>, and no exception can take the server down with it.</li>
+          <li>Hardened dynamic client registration: redirect URIs are capped per client, script-executing schemes are rejected, and the number of stored registrations is bounded.</li>
+        </ul>
+      </div>
+
+      <div class="entry">
+        <h3>0.2.0 — link it yourself</h3>
         <ul>
           <li>Self-service linking at <a href="/connect">/connect</a>: scan a QR code, get an endpoint. No operator in the loop.</li>
           <li>The QR is streamed live with a visible countdown and replaced automatically when WhatsApp expires it.</li>

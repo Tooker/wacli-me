@@ -64,7 +64,11 @@ WantedBy=multi-user.target</pre>
 
   <section>
     <h2>4 · Run the gateway</h2>
-    <pre><span class="k">npm</span> install --prefix server
+    <pre><span class="c"># the gateway running this service, MIT</span>
+<span class="k">git</span> clone https://github.com/wacli-me/wacli-me
+<span class="k">cd</span> wacli-me
+<span class="k">npm</span> install --prefix server
+<span class="k">node</span> scripts/build.mjs                      <span class="c"># site/ -&gt; web/</span>
 PORT=8787 HOST=127.0.0.1 <span class="k">node</span> server/server.mjs</pre>
     <div class="prose">
       <p>Tenants live in a JSON file that the process re-reads every few seconds, so adding an account needs no restart:</p>

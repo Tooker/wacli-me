@@ -33,6 +33,7 @@ history window; self-hosted is unlimited.
 
 - [Self-hosting](https://wacli.me/self-hosting): same code, your hardware, no account here.
 - [Open source](https://wacli.me/open-source): what is MIT-licensed and where it lives.
+- Gateway source (this service, MIT): https://github.com/wacli-me/wacli-me
 - Upstream project: https://github.com/openclaw/wacli
 
 ## Policies

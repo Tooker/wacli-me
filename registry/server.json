@@ -2,10 +2,10 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "me.wacli/whatsapp",
   "description": "Your own WhatsApp as an MCP server: read, search and send from any MCP client.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "websiteUrl": "https://wacli.me",
   "repository": {
-    "url": "https://github.com/openclaw/wacli",
+    "url": "https://github.com/wacli-me/wacli-me",
     "source": "github"
   },
   "remotes": [
