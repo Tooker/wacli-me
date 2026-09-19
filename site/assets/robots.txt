@@ -1,0 +1,47 @@
+# wacli.me — a hosted MCP gateway for your own WhatsApp account.
+#
+# Crawling is welcome, including by AI assistants: people look for this kind of
+# service by asking an assistant, not only by searching. Pages that should stay
+# out of an index say so in their own <meta name="robots"> tag, which only works
+# if the page may be fetched in the first place.
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /mcp
+Disallow: /oauth/
+
+# Named explicitly because many sites block these by default and some crawlers
+# only honour a rule that addresses them directly.
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+Sitemap: https://wacli.me/sitemap.xml

@@ -1,0 +1,61 @@
+<!--meta {"title": "Open source — wacli.me", "description": "The gateway is MIT-licensed and built on the open-source wacli CLI. Host it yourself, or let us host it.", "nav": "open-source"}-->
+<div class="hero">
+    <h1 class="page">Open source, hosted for convenience</h1>
+    <p class="lede">
+      Nothing here needs to be taken on faith. The gateway is a small MIT-licensed Node service
+      in front of <a href="https://wacli.sh">wacli</a>, the open-source WhatsApp CLI. Hosting is
+      the part you pay for — never the part that locks you in.
+    </p>
+  </div>
+
+  <section>
+    <h2>The stack</h2>
+    <div class="grid">
+      <div class="card">
+        <span class="tag">MIT</span>
+        <h3>The gateway</h3>
+        <p>Around 600 lines: HTTP transport, bearer auth, one wacli store per account, seventeen tools. Small enough to read in a coffee break — which is the point.</p>
+      </div>
+      <div class="card">
+        <span class="tag">MIT</span>
+        <h3>wacli</h3>
+        <p>The CLI doing the real work: linking a device, syncing history into a local SQLite store, full-text search, sending. An independent project, maintained in the open at <a href="https://github.com/openclaw/wacli">github.com/openclaw/wacli</a> — 2,745 stars, 343 forks, MIT, last commit within the week (GitHub, September 2026). We are users of it, not its authors.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Protocol</span>
+        <h3>MCP</h3>
+        <p>Model Context Protocol over Streamable HTTP. An open spec with many clients — no proprietary SDK stands between you and your data.</p>
+      </div>
+    </div>
+    <div class="note" style="margin-top:22px">
+      <p><strong>Alpha note.</strong> The gateway repository is not published yet — it goes public under MIT with the first public beta, and this page will link it directly. Until then, the self-hosting recipe below gets you the same result with the upstream pieces.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Self-host it</h2>
+    <p>If you would rather run it on your own machine, you need a host that stays awake, Go and Node.</p>
+    <pre><span class="c"># 1. build the CLI</span>
+<span class="k">git</span> clone https://github.com/openclaw/wacli &amp;&amp; <span class="k">cd</span> wacli
+<span class="k">go</span> build -tags sqlite_fts5 -o ~/bin/wacli ./cmd/wacli
+
+<span class="c"># 2. link your account (QR, like WhatsApp Web)</span>
+~/bin/wacli --store ~/wa-store auth
+
+<span class="c"># 3. keep history in sync (run it as a service)</span>
+~/bin/wacli --store ~/wa-store sync
+
+<span class="c"># 4. run the gateway and point a client at http://127.0.0.1:8787/mcp</span>
+<span class="k">node</span> server/server.mjs</pre>
+    <p class="hint">Self-hosting is free forever and always will be. The hosted plans exist for people who do not want to own a server, a sync daemon and a TLS certificate.</p>
+  </section>
+
+  <section>
+    <h2>What we do not do</h2>
+    <div class="facts">
+      <div class="fact"><p><strong>No training on your messages.</strong> Your content is never used to train anything, by us or anyone we pass it to.</p></div>
+      <div class="fact"><p><strong>No analytics on content.</strong> Operational logs record that a request happened, not what it said.</p></div>
+      <div class="fact"><p><strong>No lock-in.</strong> The store is a plain SQLite file. Export it, move it to your own host, delete ours.</p></div>
+      <div class="fact"><p><strong>No silent write access.</strong> Sending stays disabled until you ask for it, per account.</p></div>
+    </div>
+  </section>

@@ -1,0 +1,72 @@
+<!--meta {"title":"Roadmap — wacli.me","description":"What is being built next, what is deliberately not being built, and what would change our mind."}-->
+<div class="hero">
+    <h1 class="page">Roadmap</h1>
+    <p class="lede">
+      No quarters, no promises with dates attached. This is the order things are being worked on,
+      and the reasoning behind it — including the things that are deliberately not on the list.
+    </p>
+  </div>
+
+  <section>
+    <h2>Next</h2>
+    <div class="grid">
+      <div class="card">
+        <span class="tag">Shipped</span>
+        <h3>Self-service linking</h3>
+        <p>Done: <a href="/connect">/connect</a> runs the QR flow, and OAuth means a client can send you there and collect its own credentials. Next for it: revoking and rotating without writing to us.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Reliability</span>
+        <h3>Managed sync per account</h3>
+        <p>Each account needs a supervised sync process with health checks and a visible “your session expired, rescan” signal. Right now a dropped session is only visible in <code>account_status</code>.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Trust</span>
+        <h3>Publish the gateway repo</h3>
+        <p>MIT, with the deployment scripts and a reproducible build. Claiming to be open source while the source sits on one laptop is a claim with an expiry date.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>After that</h2>
+    <div class="timeline">
+      <div class="entry">
+        <h3>OAuth 2.1</h3>
+        <ul><li>Dynamic client registration and PKCE, with bearer tokens still accepted for clients that prefer a header.</li></ul>
+      </div>
+      <div class="entry planned">
+        <h3>Media tools</h3>
+        <ul><li>Fetch an image or a document a chat contains — on request per call, never bulk-downloaded in the background.</li></ul>
+      </div>
+      <div class="entry planned">
+        <h3>Webhooks</h3>
+        <ul><li>A signed callback when a new message arrives, so an agent does not have to poll.</li></ul>
+      </div>
+      <div class="entry planned">
+        <h3>Group and thread awareness</h3>
+        <ul><li>Reply-to context and participant lists, so a model can follow who answered whom.</li></ul>
+      </div>
+      <div class="entry planned">
+        <h3>Independent review</h3>
+        <ul><li>An outside pair of eyes on the isolation model before anyone is asked to pay.</li></ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Not planned</h2>
+    <div class="facts">
+      <div class="fact"><p><strong>Bulk messaging or campaign tools.</strong> That is what gets numbers banned, and it is not the product.</p></div>
+      <div class="fact"><p><strong>Reading accounts you do not own.</strong> No monitoring features, no “link your employee's phone” flow.</p></div>
+      <div class="fact"><p><strong>A hosted model.</strong> The gateway hands messages to your client. It does not run inference, and it does not want your content in a prompt we control.</p></div>
+      <div class="fact"><p><strong>Analytics on message content.</strong> Not for product metrics, not for “insights”, not as an upsell.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What would change the order</h2>
+    <div class="prose">
+      <p>Actual use. If the people trying this keep hitting the same wall, that wall moves to the top — and the change shows up in the <a href="/changelog">changelog</a> with a date. If you want something on this list, say so: <a href="mailto:hello@wacli.me">hello@wacli.me</a>.</p>
+    </div>
+  </section>

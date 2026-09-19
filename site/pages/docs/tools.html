@@ -1,0 +1,257 @@
+<!--meta {"title":"Tool reference — wacli.me","description":"Every MCP tool the gateway exposes: arguments, return shape and example calls.","nav":"docs"}-->
+<div class="hero">
+    <h1 class="page">Tool reference</h1>
+    <p class="lede">
+      Seventeen tools: thirteen read-only, four behind the write switch. Each returns JSON as text
+      content, close to what the underlying CLI produced — the only reshaping is unwrapping its
+      result envelope so a failed call arrives as a real error.
+    </p>
+  </div>
+
+  <section>
+    <div class="rows" style="margin-bottom:30px">
+      <div class="row"><code>account_status</code><span>Link state, store size, sync progress</span></div>
+      <div class="row"><code>list_chats</code><span>Chats by recent activity</span></div>
+      <div class="row"><code>list_messages</code><span>Messages, filtered by chat, sender and time</span></div>
+      <div class="row"><code>search_messages</code><span>Full-text search over synced history</span></div>
+      <div class="row"><code>search_contacts</code><span>Name or number to JID</span></div>
+      <div class="row"><code>get_chat</code><span>One chat in detail</span></div>
+      <div class="row"><code>get_message_context</code><span>What surrounded a message</span></div>
+      <div class="row"><code>list_starred</code><span>Messages the owner starred</span></div>
+      <div class="row"><code>list_calls</code><span>Call events, answered and missed</span></div>
+      <div class="row"><code>list_groups</code><span>Groups the account belongs to</span></div>
+      <div class="row"><code>get_group</code><span>Subject, description, participants, admins</span></div>
+      <div class="row"><code>history_coverage</code><span>How far back history reaches per chat</span></div>
+      <div class="row"><code>get_media</code><span>Fetch one message's attachment</span></div>
+      <div class="row write"><code>send_message</code><span>Send text, including to a number never messaged before</span></div>
+      <div class="row write"><code>check_numbers_on_whatsapp</code><span>Is this number on WhatsApp at all?</span></div>
+      <div class="row write"><code>react_to_message</code><span>Emoji reaction, visible to the chat</span></div>
+      <div class="row write"><code>mark_chat_read</code><span>Clear unread, sends read receipts</span></div>
+    </div>
+
+    <div class="api">
+      <h3>account_status</h3>
+      <p class="sig">account_status() → object</p>
+      <p>Diagnostics for the linked account. Use it first when something returns nothing: an account that was never linked, or one that logged out, shows up here rather than as an empty chat list.</p>
+      <pre>{
+  <span class="s">"store_dir"</span>: <span class="s">"/srv/stores/&lt;account&gt;"</span>,
+  <span class="s">"authenticated"</span>: <span class="k">true</span>,
+  <span class="s">"linked_jid"</span>: <span class="s">"4917612345678@s.whatsapp.net"</span>,
+  <span class="s">"lock_held"</span>: <span class="k">true</span>,
+  <span class="s">"messages"</span>: 48213
+}</pre>
+      <p class="hint">A <code>lock_held</code> of true is normal: the sync daemon holds the store lock while it runs.</p>
+    </div>
+
+    <div class="api">
+      <h3>list_chats</h3>
+      <p class="sig">list_chats(limit?, query?, unread?) → array</p>
+      <p>Chats of the linked account, most recent activity first. This is the usual way to turn a name into a JID.</p>
+      <table class="params">
+        <tr><th>Argument</th><th>Type</th><th>Meaning</th></tr>
+        <tr><td>limit</td><td>number</td><td>1–200, default 25</td></tr>
+        <tr><td>query</td><td>string</td><td>Filter by chat name</td></tr>
+        <tr><td>unread</td><td>boolean</td><td>Only chats with unread messages</td></tr>
+      </table>
+      <pre>[
+  {
+    <span class="s">"jid"</span>: <span class="s">"12036301234567890@g.us"</span>,
+    <span class="s">"name"</span>: <span class="s">"Apartment 4B"</span>,
+    <span class="s">"kind"</span>: <span class="s">"group"</span>,
+    <span class="s">"unread"</span>: <span class="k">true</span>,
+    <span class="s">"unread_count"</span>: 14,
+    <span class="s">"last_message_ts"</span>: 1789412044,
+    <span class="s">"pinned"</span>: <span class="k">false</span>,
+    <span class="s">"archived"</span>: <span class="k">false</span>
+  }
+]</pre>
+    </div>
+
+    <div class="api">
+      <h3>list_messages</h3>
+      <p class="sig">list_messages(chat?, limit?, from_me?, after?, before?) → array</p>
+      <p>Messages newest first. Without <code>chat</code> it spans every conversation, which is how “what came in today” questions get answered.</p>
+      <table class="params">
+        <tr><th>Argument</th><th>Type</th><th>Meaning</th></tr>
+        <tr><td>chat</td><td>string</td><td>Chat JID; omit for all chats</td></tr>
+        <tr><td>limit</td><td>number</td><td>1–200, default 25</td></tr>
+        <tr><td>from_me</td><td>boolean</td><td><code>true</code> only your messages, <code>false</code> only received</td></tr>
+        <tr><td>after / before</td><td>string</td><td><code>YYYY-MM-DD</code> or RFC 3339</td></tr>
+      </table>
+      <pre><span class="c">// "what did the landlord write this week?"</span>
+{
+  <span class="s">"name"</span>: <span class="s">"list_messages"</span>,
+  <span class="s">"arguments"</span>: {
+    <span class="s">"chat"</span>: <span class="s">"4917612345678@s.whatsapp.net"</span>,
+    <span class="s">"after"</span>: <span class="s">"2026-09-14"</span>,
+    <span class="s">"from_me"</span>: <span class="k">false</span>,
+    <span class="s">"limit"</span>: 50
+  }
+}</pre>
+    </div>
+
+    <div class="api">
+      <h3>search_messages</h3>
+      <p class="sig">search_messages(query, limit?, chat?, after?, before?) → array</p>
+      <p>Full-text search across the synced history, backed by SQLite FTS5 where the store supports it and a LIKE scan otherwise. This is the tool that makes two years of chat useful.</p>
+      <table class="params">
+        <tr><th>Argument</th><th>Type</th><th>Meaning</th></tr>
+        <tr><td>query</td><td>string</td><td>Search terms, required</td></tr>
+        <tr><td>limit</td><td>number</td><td>1–200, default 25</td></tr>
+        <tr><td>chat</td><td>string</td><td>Restrict to one conversation</td></tr>
+        <tr><td>after / before</td><td>string</td><td>Time bounds</td></tr>
+      </table>
+      <pre><span class="c">// "find the IBAN someone sent me"</span>
+{ <span class="s">"name"</span>: <span class="s">"search_messages"</span>,
+  <span class="s">"arguments"</span>: { <span class="s">"query"</span>: <span class="s">"IBAN DE"</span>, <span class="s">"limit"</span>: 10 } }</pre>
+    </div>
+
+    <div class="api">
+      <h3>search_contacts</h3>
+      <p class="sig">search_contacts(query, limit?) → array</p>
+      <p>Resolve a name or number to a contact and its JID, from the synced contact metadata. Cheaper than listing chats when you already know who you mean.</p>
+      <table class="params">
+        <tr><th>Argument</th><th>Type</th><th>Meaning</th></tr>
+        <tr><td>query</td><td>string</td><td>Name fragment or number, required</td></tr>
+        <tr><td>limit</td><td>number</td><td>1–200, default 25</td></tr>
+      </table>
+    </div>
+
+    <div class="api">
+      <h3>get_chat</h3>
+      <p class="sig">get_chat(chat) → object</p>
+      <p>One chat in detail: name, kind, unread count, mute and pin state. Useful when a client already holds a JID and does not want to page through a chat list to check one thing.</p>
+      <table class="params">
+        <tr><th>Argument</th><th>Type</th><th>Meaning</th></tr>
+        <tr><td>chat</td><td>string</td><td>Chat JID, required</td></tr>
+      </table>
+    </div>
+
+    <div class="api">
+      <h3>get_message_context</h3>
+      <p class="sig">get_message_context(chat, message_id, before?, after?) → object</p>
+      <p>The messages around one message. A search hit on its own is often meaningless — “yes, fine” answers something, and this is how a model finds out what.</p>
+      <table class="params">
+        <tr><th>Argument</th><th>Type</th><th>Meaning</th></tr>
+        <tr><td>chat</td><td>string</td><td>Chat JID, required</td></tr>
+        <tr><td>message_id</td><td>string</td><td>Id from a search or list result</td></tr>
+        <tr><td>before / after</td><td>number</td><td>0–50 messages each side, default 5</td></tr>
+      </table>
+      <pre><span class="c">// search first, then read around the hit</span>
+{ <span class="s">"name"</span>: <span class="s">"get_message_context"</span>,
+  <span class="s">"arguments"</span>: { <span class="s">"chat"</span>: <span class="s">"4917612345678@s.whatsapp.net"</span>,
+                   <span class="s">"message_id"</span>: <span class="s">"3EB0…"</span>, <span class="s">"before"</span>: 8, <span class="s">"after"</span>: 4 } }</pre>
+    </div>
+
+    <div class="api">
+      <h3>list_starred</h3>
+      <p class="sig">list_starred(limit?, chat?) → array</p>
+      <p>Messages the account owner starred. A hand-curated set of the things they thought mattered — often the fastest path to an address, a code or a document.</p>
+    </div>
+
+    <div class="api">
+      <h3>list_calls</h3>
+      <p class="sig">list_calls(limit?, chat?, after?, before?) → array</p>
+      <p>Call events with time, peer and whether the call was answered. Answers “did they ever actually call me back” without reading a single message.</p>
+    </div>
+
+    <div class="api">
+      <h3>list_groups</h3>
+      <p class="sig">list_groups(limit?, query?) → array</p>
+      <p>Groups the account belongs to, optionally filtered by name. Groups also appear in <code>list_chats</code>; this returns the group-level record instead of the chat record.</p>
+    </div>
+
+    <div class="api">
+      <h3>get_group</h3>
+      <p class="sig">get_group(group) → object</p>
+      <p>Subject, description, participant list and admins of one group. The tool that answers “who is even in this group” and “who can add people”.</p>
+      <table class="params">
+        <tr><th>Argument</th><th>Type</th><th>Meaning</th></tr>
+        <tr><td>group</td><td>string</td><td>Group JID ending in <code>@g.us</code></td></tr>
+      </table>
+    </div>
+
+    <div class="api">
+      <h3>history_coverage</h3>
+      <p class="sig">history_coverage(limit?, query?, chat?) → object</p>
+      <p>How far back synced history actually reaches, per chat. Worth calling before concluding that something was never said: an empty search can mean “not in this account's synced window” rather than “never happened”.</p>
+    </div>
+
+    <div class="api">
+      <h3>get_media</h3>
+      <p class="sig">get_media(chat, message_id) → image | object</p>
+      <p>Downloads the attachment of one message on demand. Images up to 5 MB come back as image content, so a model can look at the photo of the parking permit instead of guessing from the filename. Other types return their media type and size.</p>
+      <table class="params">
+        <tr><th>Argument</th><th>Type</th><th>Meaning</th></tr>
+        <tr><td>chat</td><td>string</td><td>Chat JID, required</td></tr>
+        <tr><td>message_id</td><td>string</td><td>Id of the message holding the media</td></tr>
+      </table>
+      <p class="hint">Media is fetched per call and the temporary copy is deleted immediately afterwards. Nothing is bulk-downloaded in the background.</p>
+    </div>
+
+    <h2 style="margin:44px 0 20px">Write access</h2>
+    <div class="note" style="margin-bottom:22px">
+      <p><strong>These four exist only for accounts with the write switch on.</strong> For everyone else they are not registered, so <code>tools/list</code> does not mention them. Three of them change what other people see — that is the line, not whether a call technically writes to your own store.</p>
+    </div>
+
+    <div class="api">
+      <h3>send_message <span class="pill soon">write access</span></h3>
+      <p class="sig">send_message(to, message) → object</p>
+      <p>Sends a text message from the linked account. The tool is <strong>not registered at all</strong> for accounts without write access — a client cannot list it, let alone call it. Where it is enabled, the write path runs without the CLI's read-only guard, and the result contains the message id that WhatsApp assigned.</p>
+      <table class="params">
+        <tr><th>Argument</th><th>Type</th><th>Meaning</th></tr>
+        <tr><td>to</td><td>string</td><td>JID, phone number, or exact chat name</td></tr>
+        <tr><td>message</td><td>string</td><td>Message text</td></tr>
+      </table>
+      <p style="margin-top:14px">A phone number that has never been messaged works: WhatsApp starts a new conversation, exactly as it would if you typed the number into the app. Check the number exists first.</p>
+      <div class="note" style="margin-top:16px">
+        <p><strong>This one is irreversible.</strong> A sent message cannot be unsent by the protocol, and automated sending is what puts a number at risk of restriction. Good clients confirm recipient and wording with you first — insist on one that does.</p>
+      </div>
+    </div>
+  </section>
+
+    <div class="api">
+      <h3>check_numbers_on_whatsapp <span class="pill soon">write access</span></h3>
+      <p class="sig">check_numbers_on_whatsapp(numbers[]) → array</p>
+      <p>Asks WhatsApp whether phone numbers are registered, before you write to one of them. This is a live lookup against WhatsApp's servers, not a local database query — which is why it sits behind the write switch and is capped at 20 numbers per call.</p>
+      <table class="params">
+        <tr><th>Argument</th><th>Type</th><th>Meaning</th></tr>
+        <tr><td>numbers</td><td>string[]</td><td>1–20 numbers in international format</td></tr>
+      </table>
+      <p class="hint">Check numbers a person actually intends to contact. Sweeping a range through this is number enumeration, it is against WhatsApp's terms, and it is grounds for having the account's access removed here.</p>
+    </div>
+
+    <div class="api">
+      <h3>react_to_message <span class="pill soon">write access</span></h3>
+      <p class="sig">react_to_message(to, message_id, reaction?, sender?) → object</p>
+      <p>Puts an emoji reaction on a message; an empty reaction removes it. Everyone in the chat sees it, which makes it a write even though nothing is sent as a message.</p>
+      <table class="params">
+        <tr><th>Argument</th><th>Type</th><th>Meaning</th></tr>
+        <tr><td>to</td><td>string</td><td>Chat JID, number or exact name</td></tr>
+        <tr><td>message_id</td><td>string</td><td>Target message</td></tr>
+        <tr><td>reaction</td><td>string</td><td>Emoji, default 👍; empty string removes</td></tr>
+        <tr><td>sender</td><td>string</td><td>Sender JID of the target — required in groups</td></tr>
+      </table>
+    </div>
+
+    <div class="api">
+      <h3>mark_chat_read <span class="pill soon">write access</span></h3>
+      <p class="sig">mark_chat_read(chat) → object</p>
+      <p>Clears the unread badge. It sends read receipts, so the other side learns you have seen the message — use it after actually reading, not to tidy a list.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Calling a tool without a client</h2>
+    <pre><span class="k">curl</span> -sS https://wacli.me/mcp \
+  -H <span class="s">"Authorization: Bearer $TOKEN"</span> \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -H <span class="s">"Accept: application/json, text/event-stream"</span> \
+  -d <span class="s">'{"jsonrpc":"2.0","id":1,"method":"tools/call",
+       "params":{"name":"list_chats","arguments":{"limit":5}}}'</span></pre>
+    <p class="hint">The response arrives as a single server-sent event; the JSON sits after <code>data: </code>.</p>
+    <div class="cta">
+      <a class="btn" href="/docs">Back to docs</a>
+      <a class="btn ghost" href="/use-cases">See it in practice</a>
+    </div>
+  </section>

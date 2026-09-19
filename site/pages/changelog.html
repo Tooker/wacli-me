@@ -1,0 +1,64 @@
+<!--meta {"title":"Changelog — wacli.me","description":"What shipped, when, and what broke. Dated entries, no marketing."}-->
+<div class="hero">
+    <h1 class="page">Changelog</h1>
+    <p class="lede">
+      Every release and every incident, dated. The project is young — this list starts where the
+      project starts, and it is not padded.
+    </p>
+  </div>
+
+  <section>
+    <div class="timeline">
+
+      <div class="entry">
+        <h3>0.2.0 — link it yourself <span class="pill live">current</span></h3>
+        <ul>
+          <li>Self-service linking at <a href="/connect">/connect</a>: scan a QR code, get an endpoint. No operator in the loop.</li>
+          <li>The QR is streamed live with a visible countdown and replaced automatically when WhatsApp expires it.</li>
+          <li>OAuth 2.1 with dynamic client registration and PKCE — add the server in a client, authorize in the browser, done. Nothing to copy.</li>
+          <li>Unauthenticated requests now answer with <code>WWW-Authenticate</code> pointing at the resource metadata, so clients find the authorization server themselves.</li>
+          <li>Sending is chosen at link time instead of being requested afterwards.</li>
+        </ul>
+      </div>
+
+      <div class="entry">
+        <h3>0.1.0 — first running alpha</h3>
+        <ul>
+          <li>MCP gateway over Streamable HTTP, stateless, one server instance per request.</li>
+          <li>Bearer-token authentication; one isolated wacli store per token, constant-time comparison.</li>
+          <li>Five read tools: <code>account_status</code>, <code>list_chats</code>, <code>list_messages</code>, <code>search_messages</code>, <code>search_contacts</code>.</li>
+          <li><code>send_message</code> implemented but registered only for accounts with explicit write access.</li>
+          <li>Reads invoke the CLI with its read-only guard, so a tool call cannot mutate a store.</li>
+          <li>Pinned to wacli 0.18.2, built from source with the <code>sqlite_fts5</code> tag.</li>
+          <li>Website, documentation, tool reference and self-hosting guide published.</li>
+        </ul>
+      </div>
+
+      <div class="entry">
+        <h3>Fixed: JSON envelope leaked into tool results</h3>
+        <ul>
+          <li>The CLI wraps responses in <code>{success, data, error}</code>. Tools returned that wrapper verbatim, so clients had to unwrap it and a failed call still looked successful.</li>
+          <li>The gateway now unwraps the envelope and turns <code>success: false</code> into a real tool error.</li>
+        </ul>
+      </div>
+
+      <div class="entry">
+        <h3>Fixed: stale pages behind the edge cache</h3>
+        <ul>
+          <li>HTML was served with a five-minute cache lifetime, so updates did not appear.</li>
+          <li>HTML is now <code>no-cache</code>; static assets keep their cache lifetime.</li>
+        </ul>
+      </div>
+
+      <div class="entry planned">
+        <h3>In progress</h3>
+        <ul>
+          <li>Per-account sync daemons managed by the service instead of by hand.</li>
+          <li>Publishing the gateway repository under MIT.</li>
+          <li>Token rotation and revocation from a page instead of by email.</li>
+        </ul>
+      </div>
+
+    </div>
+    <p class="hint">Dates are the day a change went live, not the day it was written. Incidents are listed with the same weight as features — see <a href="/status">status</a> for what is running right now.</p>
+  </section>

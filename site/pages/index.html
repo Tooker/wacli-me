@@ -1,0 +1,119 @@
+<!--meta {"title": "wacli.me — your WhatsApp as an MCP server", "ogtitle": "wacli.me", "description": "Open-source gateway that turns your own WhatsApp into an MCP endpoint. Read, search and send from Claude, ChatGPT or any MCP client. Self-host it or let us host it.", "scripts": "<script>\n  // Show the endpoint this page is actually served from, so test deployments stay honest.\n  var el = document.getElementById(\"endpoint\");\n  if (el && location.hostname !== \"wacli.me\") el.textContent = location.origin + \"/mcp\";\n</script>"}-->
+<div class="hero">
+    <h1>Your WhatsApp,<br><em>as an MCP server.</em></h1>
+    <p class="lede">
+      Link your account once and get an endpoint any MCP client can talk to — Claude, ChatGPT,
+      your editor, your own agent. Ask for a summary of a thread, search two years of history,
+      draft the reply. The gateway is open source: host it yourself, or let us host it for you.
+    </p>
+    <div class="endpoint">
+      <span class="method">MCP</span>
+      <span class="url" id="endpoint">https://wacli.me/mcp</span>
+    </div>
+    <p class="hint">Streamable HTTP transport · bearer token per account · you choose read-only or read-and-send when you link.</p>
+    <div class="cta">
+      <a class="btn" href="/connect">Link your WhatsApp</a>
+      <a class="btn ghost" href="/use-cases">See what it can do</a>
+    </div>
+  </div>
+
+  <section id="how-it-works">
+    <h2>How it works</h2>
+    <div class="grid steps">
+      <div class="card">
+        <h3>Link your account</h3>
+        <p>On <a href="/connect">the linking page</a> you scan one QR code, the way you link WhatsApp Web. It is a linked device, not a takeover — unlink it from your phone at any time.</p>
+      </div>
+      <div class="card">
+        <h3>Get your endpoint</h3>
+        <p>You receive a URL and a bearer token. The token maps to your own isolated message store; nobody else's tools can reach it.</p>
+      </div>
+      <div class="card">
+        <h3>Point a client at it</h3>
+        <p>Paste both into any MCP client. Chats, search and history show up as tools within seconds.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Connecting</h2>
+    <pre><span class="c"># Claude Code</span>
+<span class="k">claude</span> mcp add --transport http whatsapp <span class="s">https://wacli.me/mcp</span> \
+  --header <span class="s">"Authorization: Bearer &lt;your-token&gt;"</span>
+
+<span class="c"># any client that speaks MCP over HTTP</span>
+{
+  <span class="s">"whatsapp"</span>: {
+    <span class="s">"type"</span>: <span class="s">"http"</span>,
+    <span class="s">"url"</span>: <span class="s">"https://wacli.me/mcp"</span>,
+    <span class="s">"headers"</span>: { <span class="s">"Authorization"</span>: <span class="s">"Bearer &lt;your-token&gt;"</span> }
+  }
+}</pre>
+    <p class="hint">Then just talk to your assistant: <em>“What did the plumber say about the appointment?”</em></p>
+  </section>
+
+  <section>
+    <h2>Tools</h2>
+    <p class="lede" style="margin-bottom:24px">
+      Thirteen read-only tools, four behind a write switch you set when you link — and can turn off.
+    </p>
+    <div class="rows">
+      <div class="row"><code>search_messages</code><span>Full-text search across your synced history.</span></div>
+      <div class="row"><code>list_messages</code><span>Messages of one chat, with time and sender filters.</span></div>
+      <div class="row"><code>get_message_context</code><span>What was said around a message — the answer to “answering what?”</span></div>
+      <div class="row"><code>list_chats</code> <span>Chats by recent activity, filterable by name or unread.</span></div>
+      <div class="row"><code>list_groups</code><span>Groups, their subjects, participants and admins.</span></div>
+      <div class="row"><code>get_media</code><span>Fetch one message's image, on demand, never in bulk.</span></div>
+      <div class="row"><code>list_calls</code><span>Who called, when, answered or missed.</span></div>
+      <div class="row"><code>history_coverage</code><span>How far back your history actually reaches.</span></div>
+      <div class="row write"><code>send_message</code><span>Send text — also to a number you have never written to.</span></div>
+      <div class="row write"><code>check_numbers_on_whatsapp</code><span>Is that number on WhatsApp at all?</span></div>
+    </div>
+    <div class="cta"><a class="btn ghost" href="/docs/tools">Full tool reference — all 17</a></div>
+  </section>
+
+  <section>
+    <h2>Pricing</h2>
+    <p class="lede" style="margin-bottom:0">
+      Free while the alpha runs — no payment flow, no card, no bill. Self-hosting is free without
+      limits, permanently. A paid tier for several accounts in one workspace is planned; it is not
+      priced yet, and pricing comes with 30 days' notice.
+    </p>
+    <div class="cta"><a class="btn ghost" href="/pricing">See the plans</a></div>
+  </section>
+
+  <section>
+    <h2>The project</h2>
+    <div class="grid">
+      <div class="card">
+        <span class="tag">Open</span>
+        <h3>Built on open source</h3>
+        <p>The heavy lifting is done by <a href="https://github.com/openclaw/wacli">wacli</a> — an independent MIT-licensed WhatsApp CLI with <strong>2,745 stars</strong> and 343 forks on GitHub, actively developed since December 2025. This service is a hosted gateway in front of it, run by different people; the gateway is MIT too and publishes with the public beta.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Public</span>
+        <h3>Changes in the open</h3>
+        <p>Every release and every incident is dated in the <a href="/changelog">changelog</a>. What comes next, and what will never be built, is on the <a href="/roadmap">roadmap</a>.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Written down</span>
+        <h3>Decisions, not slogans</h3>
+        <p>Why sending is off, how accounts are isolated, why a tool server beats a chatbot — the reasoning is in the <a href="/blog">build notes</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Why you can check us instead of trusting us</h2>
+    <div class="facts">
+      <div class="fact"><p><strong>Open source.</strong> The gateway is MIT-licensed and builds on the open-source <a href="https://wacli.sh">wacli</a> CLI. Read every line that touches your messages.</p></div>
+      <div class="fact"><p><strong>Self-hostable.</strong> Same code, your hardware, no account here. Hosting is a convenience, never a lock-in.</p></div>
+      <div class="fact"><p><strong>Sending is its own permission.</strong> One switch when you link; decline it and the write tools are never even registered.</p></div>
+      <div class="fact"><p><strong>No third parties.</strong> Your messages are not sent to any analytics, ad or model provider by us — only to the client you connect.</p></div>
+    </div>
+    <div class="cta">
+      <a class="btn" href="/docs">Read the docs</a>
+      <a class="btn ghost" href="/faq">Questions people ask</a>
+      <a class="btn ghost" href="/status">Current status</a>
+    </div>
+  </section>

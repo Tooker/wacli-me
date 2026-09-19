@@ -1,0 +1,80 @@
+<!--meta {"title": "Pricing — wacli.me", "description": "Free while the alpha runs. A paid tier for several accounts in one workspace is planned but not priced yet. Self-hosting is free forever.", "nav": "pricing", "head": "<style>\n.plans{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));align-items:start}\n  .plan{border:1px solid var(--line);background:var(--bg-soft);border-radius:var(--radius);padding:26px}\n  .plan.featured{border-color:rgba(0,209,127,.45);box-shadow:0 0 0 1px rgba(0,209,127,.12)}\n  .plan .name{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}\n  .plan .price{font-size:38px;font-weight:600;letter-spacing:-.03em;color:var(--ink);line-height:1.1;margin:0}\n  .plan .per{font-size:14px;color:var(--ink-faint);margin:6px 0 20px}\n  .plan ul{list-style:none;padding:0;margin:0 0 22px}\n  .plan li{display:flex;gap:10px;font-size:14.5px;margin:0 0 10px}\n  .plan li::before{content:\"→\";color:var(--accent);font-family:var(--mono);font-size:13px;line-height:1.7}\n  .plan li.off{color:var(--ink-faint)}\n  .plan li.off::before{content:\"·\";color:var(--ink-faint)}\n</style>"}-->
+<div class="hero">
+    <h1 class="page">Free while this is an alpha</h1>
+    <p class="lede">
+      Right now there is no payment flow, no card on file and no bill — everyone runs on the free
+      terms. A paid tier is planned for the case where several accounts run through one place, but
+      it is not priced yet. Self-hosting stays free regardless.
+    </p>
+  </div>
+
+  <section>
+    <div class="plans">
+
+      <div class="plan">
+        <p class="name">Free</p>
+        <p class="price">€0</p>
+        <p class="per">one linked account · available now</p>
+        <ul>
+          <li>1 WhatsApp account</li>
+          <li>All read tools: chats, messages, search, contacts</li>
+          <li>Unlimited MCP clients on that one token</li>
+          <li>90 days of synced history</li>
+          <li class="off">Sending on request, rate-limited</li>
+          <li class="off">Community support</li>
+        </ul>
+        <a class="btn ghost" href="/#how-it-works">Link an account</a>
+      </div>
+
+      <div class="plan featured">
+        <p class="name">Pro</p>
+        <p class="price">Coming soon</p>
+        <p class="per">planned from roughly five accounts up</p>
+        <ul>
+          <li>Several linked accounts in one workspace</li>
+          <li>Sending enabled, higher rate limits</li>
+          <li>Full history sync, no 90-day window</li>
+          <li>Separate token and store per account</li>
+          <li>Webhook on new messages</li>
+          <li class="off">Price and limits not decided yet</li>
+        </ul>
+        <a class="btn" href="/#how-it-works">Use the free tier meanwhile</a>
+      </div>
+
+      <div class="plan">
+        <p class="name">Self-hosted</p>
+        <p class="price">€0</p>
+        <p class="per">your hardware, your rules</p>
+        <ul>
+          <li>Same gateway, MIT licensed</li>
+          <li>Unlimited accounts</li>
+          <li>Messages never leave your machine</li>
+          <li class="off">You run the sync daemon and the TLS</li>
+          <li class="off">Support is the issue tracker</li>
+        </ul>
+        <a class="btn ghost" href="/open-source">Read the setup</a>
+      </div>
+
+    </div>
+
+    <div class="note" style="margin-top:26px">
+      <p><strong>Nothing is billable yet.</strong> There is no payment flow, and no plan can be bought today. When pricing is announced it comes with at least 30 days' notice, and alpha accounts keep the free terms for that period — nobody wakes up to a bill.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Questions people ask first</h2>
+    <div class="prose">
+      <h3>Why would more than one account be the paid line?</h3>
+      <p>One account costs a little storage and a sync process. Several accounts is a different shape of workload — and usually a business using it, not a person catching up on a family group.</p>
+
+      <h3>When does pricing land?</h3>
+      <p>When the service is stable enough to promise something. Until then the honest answer is: unknown, and free.</p>
+
+      <h3>Would I lose data if I ever stopped paying?</h3>
+      <p>No. A downgrade would drop you to free limits; the store stays until you delete it, and you can export it at any point. Cancelling will never delete messages behind your back.</p>
+
+      <h3>Is my WhatsApp account at risk?</h3>
+      <p>Linking a device is the same mechanism WhatsApp Web uses. It is still a device you are responsible for — see <a href="/security">Security</a> for the honest version, including what automated sending can cost you.</p>
+    </div>
+  </section>

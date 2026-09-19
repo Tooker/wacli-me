@@ -1,0 +1,52 @@
+<!--meta {"title":"Status — wacli.me","description":"What is running, what is not redundant, and what an alpha outage actually looks like."}-->
+<div class="hero">
+    <h1 class="page">Status</h1>
+    <p class="lede">
+      This page is maintained by hand, and it says so. An automated status page that always shows
+      green is worth less than a sentence written by someone who knows what broke.
+    </p>
+  </div>
+
+  <section>
+    <h2>Components</h2>
+    <table class="kv">
+      <tr><th>Component</th><th>State</th><th>Notes</th></tr>
+      <tr><td>MCP endpoint <code>/mcp</code></td><td><span class="pill live">running</span></td><td>Stateless, one process</td></tr>
+      <tr><td>Website</td><td><span class="pill live">running</span></td><td>Static, served by the same process</td></tr>
+      <tr><td>Health check <code>/healthz</code></td><td><span class="pill live">running</span></td><td>Version and tenant count</td></tr>
+      <tr><td>Sync daemons</td><td><span class="pill soon">manual</span></td><td>Started per account by hand; supervision is on the roadmap</td></tr>
+      <tr><td>Self-service linking</td><td><span class="pill live">running</span></td><td>QR flow at <a href="/connect">/connect</a>, token or OAuth</td></tr>
+      <tr><td>OAuth 2.1</td><td><span class="pill live">running</span></td><td>Dynamic registration, PKCE; no token to copy</td></tr>
+      <tr><td>Redundancy</td><td><span class="pill soon">none</span></td><td>Single host, single region</td></tr>
+      <tr><td>Automated monitoring</td><td><span class="pill soon">none</span></td><td>Failures are noticed, not alerted</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>What an outage looks like</h2>
+    <div class="prose">
+      <p>One machine runs everything. If it reboots, the endpoint is gone until the service comes back up. If the tunnel in front of it reconnects, requests fail for a few seconds. If a WhatsApp session expires, that one account returns empty results until it is re-linked — the endpoint itself stays healthy, which is why <code>account_status</code> exists.</p>
+      <p>There is no SLA, no uptime number, and no compensation. If that is not acceptable for what you want to do, <a href="/self-hosting">run it yourself</a> — then the machine is yours and so is the uptime.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Incidents</h2>
+    <div class="timeline">
+      <div class="entry">
+        <h3>Public URL changed twice</h3>
+        <ul>
+          <li>The alpha is published through an ephemeral tunnel whose hostname changes on restart, and two deploys restarted it.</li>
+          <li>Fixed by separating the deploy from the tunnel; the hostname now survives a deploy. A stable domain removes the problem entirely.</li>
+        </ul>
+      </div>
+      <div class="entry">
+        <h3>Stale pages served from the edge cache</h3>
+        <ul>
+          <li>HTML carried a five-minute cache lifetime, so updated pages did not appear for visitors.</li>
+          <li>Fixed: HTML is served with <code>no-cache</code>.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="hint">Incidents are also listed in the <a href="/changelog">changelog</a>, with the same wording. Nothing gets quietly dropped from one and kept in the other.</p>
+  </section>

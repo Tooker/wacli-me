@@ -1,0 +1,42 @@
+<!--meta {"title":"Why sending is off by default — wacli.me","description":"A tool an assistant cannot see is a tool it cannot call by mistake. Why write access is a separate switch.","nav":"blog"}-->
+<div class="hero">
+    <h1 class="page">Why sending is off by default</h1>
+    <p class="post-meta">build notes</p>
+  </div>
+
+  <section>
+    <div class="prose post">
+      <p>Every demo of an assistant with messaging access ends the same way: it sends something. Usually to the right person. The interesting question is what happens on the day it does not.</p>
+
+      <p>Reading a chat is recoverable. Someone saw something they did not need to see, which is bad, and it stops there. Sending is not recoverable. The message is on someone else's phone, with your name on it, in a relationship you have to keep afterwards.</p>
+
+      <h3>Confirmation dialogs are weaker than they look</h3>
+
+      <p>The usual answer is a confirmation step: show the user the message, let them approve. Good clients do this, and you should prefer one that does. But it is a property of the client, not of the server — and clients vary, run in batch mode, and get configured to auto-approve by users who got tired of clicking.</p>
+
+      <p>So the guarantee cannot live there. It has to live where the tool list is built.</p>
+
+      <h3>Not registered beats disabled</h3>
+
+      <p>For an account without write access, <code>send_message</code> is not in the tool list at all. The model never sees it, never plans around it, never tries. There is no code path where a flag is checked late and read wrong, because there is no flag: the tool was simply never added to that server instance.</p>
+
+      <p>Underneath, reads go one step further and run the CLI with its own read-only guard, which refuses anything that would write to WhatsApp or mutate the store. Two independent mechanisms, one intent.</p>
+
+      <h3>Then why have it at all?</h3>
+
+      <p>Because “message Tom that I'm twenty minutes late” is genuinely the best part, and refusing to build it would be posturing. It is a switch — per account, enabled on request, with the reasons stated plainly on <a href="/security">the security page</a> rather than buried in a tooltip.</p>
+
+      <p>The same reasoning draws the line at the other end. <code>check_numbers_on_whatsapp</code> only reads, but it reads by asking WhatsApp about a stranger's number, which is a small act of reconnaissance and a plausible enumeration tool. It sits behind the same switch. So does marking a chat read, because read receipts are visible to the other person: quietly telling someone you have seen their message is a side effect on their screen, not yours.</p>
+
+      <blockquote>If a tool changes what someone else sees, it belongs behind the write switch — even when it technically only reads.</blockquote>
+
+      <h3>What stays off entirely</h3>
+
+      <p>Bulk sending is not a feature that will appear later. It is what gets numbers banned, it is what makes this category of tool a nuisance, and it is on the <a href="/roadmap">not-planned list</a> for both reasons. The write switch exists for conversations, not campaigns.</p>
+
+      <div class="next-prev">
+        <span><a href="/blog/isolation-by-construction">← Isolation by construction</a></span>
+        <span><a href="/blog">All notes →</a></span>
+      </div>
+    </div>
+  </section>

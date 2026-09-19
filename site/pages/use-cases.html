@@ -1,0 +1,116 @@
+<!--meta {"title": "Use cases — wacli.me", "description": "What you can do once your WhatsApp is an MCP server: catch up on threads, search years of history, draft and send replies from Claude or ChatGPT.", "nav": "use-cases"}-->
+<div class="hero">
+    <h1 class="page">What you do with it</h1>
+    <p class="lede">
+      Once the endpoint is connected, WhatsApp is just another thing your assistant can read.
+      You type in plain language; the client picks the tools. Here is what that looks like in practice.
+    </p>
+  </div>
+
+  <section>
+    <h2>Reading</h2>
+    <div class="grid">
+      <div class="card">
+        <span class="tag">Catch up</span>
+        <p class="quote">Summarise what I missed in the apartment group since Friday, and list anything addressed to me.</p>
+        <p>The client calls <code>list_chats</code>, then <code>list_messages</code> with a date filter, and gives you five bullets instead of 300 unread messages.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Find it again</span>
+        <p class="quote">Someone sent me an IBAN last year — which chat, and what was the number?</p>
+        <p><code>search_messages</code> runs full-text search over your synced history and comes back with the message, the sender and the date.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Decide faster</span>
+        <p class="quote">Did we ever agree on a price for the job, or is that still open?</p>
+        <p>The assistant reads the thread in order and quotes the two messages the answer hangs on, instead of you scrolling on a phone.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Writing</h2>
+    <p class="lede" style="margin-bottom:24px">
+      Sending is off until you switch it on for your account. When it is on, one sentence is the whole interaction.
+    </p>
+    <div class="grid">
+      <div class="card">
+        <span class="tag">Quick reply</span>
+        <p class="quote">Message Tom: I'm running twenty minutes late, start without me.</p>
+        <p><code>search_contacts</code> resolves “Tom”, <code>send_message</code> sends it. A good client shows you the text and the recipient before it goes out.</p>
+      </div>
+      <div class="card">
+        <span class="tag">In your voice</span>
+        <p class="quote">Read my last ten messages to this client, then answer their question about the deadline the same way I'd write it.</p>
+        <p>Reading and writing in one turn: the draft matches the thread's tone because the model just read the thread.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Someone new</span>
+        <p class="quote">Write to +49 176 1234567: this is the electrician's number from the group, ask if Thursday works.</p>
+        <p><code>check_numbers_on_whatsapp</code> confirms the number is registered, then <code>send_message</code> opens a conversation that never existed before.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Batch work</span>
+        <p class="quote">Which customer messages from this week did nobody answer?</p>
+        <p>The assistant scans chats for the last inbound message per thread and hands you a shortlist — then sends the replies you approve.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Digging into history</h2>
+    <div class="grid">
+      <div class="card">
+        <span class="tag">Context</span>
+        <p class="quote">Find where we agreed on the deposit and show me what was said right before and after.</p>
+        <p><code>search_messages</code> finds the hit, <code>get_message_context</code> pulls the surrounding messages — because “yes, that works” means nothing on its own.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Attachments</span>
+        <p class="quote">Someone sent a photo of the meter reading in July. What number is on it?</p>
+        <p><code>search_messages</code> narrows it down, <code>get_media</code> fetches that one image and hands it to the model to read.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Groups</span>
+        <p class="quote">Who is actually in the building group, and who can add people?</p>
+        <p><code>list_groups</code> and <code>get_group</code> return subject, participants and admins — the things a chat list does not show.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Combined with your other tools</h2>
+    <div class="grid">
+      <div class="card">
+        <span class="tag">Calendar</span>
+        <p class="quote">Any appointment agreed in a chat this week that never made it into my calendar?</p>
+        <p>WhatsApp is one MCP server, your calendar is another. The client reads both and reconciles them.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Automation</span>
+        <p>A scheduled agent checks every morning whether a booking request came in overnight, files it, and tells you only when something actually needs a decision.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Your own code</span>
+        <p>It is a plain MCP endpoint over HTTP. Anything that speaks the protocol — a script, a bot, a cron job — can use it with a bearer token and no SDK.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Connecting a client</h2>
+    <pre><span class="c"># Claude Code</span>
+<span class="k">claude</span> mcp add --transport http whatsapp <span class="s">https://wacli.me/mcp</span> \
+  --header <span class="s">"Authorization: Bearer &lt;your-token&gt;"</span>
+
+<span class="c"># Claude Desktop / ChatGPT / any HTTP-MCP client: add a custom connector</span>
+<span class="c"># URL    </span> <span class="s">https://wacli.me/mcp</span>
+<span class="c"># Header </span> <span class="s">Authorization: Bearer &lt;your-token&gt;</span></pre>
+    <div class="note">
+      <p><strong>Client support varies.</strong> Remote MCP servers with a bearer header work today in Claude Code and any HTTP-MCP client; other apps are adding remote-connector support at their own pace, and some accept OAuth only. If yours does not take a header yet, run the gateway locally and connect over stdio.</p>
+    </div>
+    <div class="cta">
+      <a class="btn" href="/open-source">Self-host it</a>
+      <a class="btn ghost" href="/security">How it's secured</a>
+    </div>
+  </section>

@@ -1,0 +1,67 @@
+<!--meta {"title": "Privacy — wacli.me", "description": "What wacli.me stores, for how long, who can see it, and how to get rid of it."}-->
+<div class="hero">
+    <h1 class="page">Privacy</h1>
+    <p class="lede">
+      Short version: the website collects nothing, the service stores the message history of the
+      account you linked, we do not read it, we do not share it, and you can have it deleted at any
+      time.
+    </p>
+  </div>
+
+  <section>
+    <div class="prose">
+      <h3>Who is responsible</h3>
+      <p>Controller under Article 4(7) GDPR for the processing described here is {{provider_short}}.</p>
+
+      <h2 style="margin:36px 0 18px">The website</h2>
+      <p>No cookies, no analytics, no tracking pixels, no third-party scripts beyond the web font served by Google Fonts, which sees your IP address when the font loads. Standard web-server logs record IP address, time, path and user agent, and are kept for seven days for abuse defence.</p>
+
+      <h2 style="margin:36px 0 18px">The service</h2>
+
+      <h3>What is stored</h3>
+      <ul>
+        <li><strong>Message history</strong> of the linked account: text, sender, timestamps, chat and contact names, and metadata about media. Media files are downloaded only when a tool explicitly requests one.</li>
+        <li><strong>Device credentials</strong> from the QR link, which keep the session alive the same way WhatsApp Web does.</li>
+        <li><strong>Account record</strong>: an identifier, your bearer token, your store path, whether sending is enabled, and a contact address if you gave one.</li>
+        <li><strong>Operational logs</strong>: that a request happened, which account, which tool, how long it took. Not the content of messages or tool results.</li>
+      </ul>
+
+      <h3>Where it is stored</h3>
+      <p>On a single server in Iceland, inside the European Economic Area, in a per-account directory on an encrypted volume. No cloud message database, no replication to other providers.</p>
+
+      <h3>Who can access it</h3>
+      <p>You, through your token. The operator, through the machine — technically unavoidable for any hosted service, and used only for debugging a problem you reported or for the legal reasons below. Nobody else.</p>
+
+      <h3>What we never do</h3>
+      <ul>
+        <li>Train models on your messages, or let anyone else do it.</li>
+        <li>Sell, rent or share your data, or run ads.</li>
+        <li>Send message content to analytics or error-tracking services.</li>
+        <li>Read your chats out of curiosity, or scan them for content.</li>
+      </ul>
+
+      <h3>Where the data goes when you use it</h3>
+      <p>When you connect an MCP client, the messages a tool returns travel to that client and, in an assistant, to that assistant's model provider. That transfer is caused by your prompt and governed by the client's own privacy policy — we are not a party to it. Pick your client accordingly.</p>
+
+      <h3>Retention</h3>
+      <ul>
+        <li><strong>Messages:</strong> kept while the account is linked. On the Free plan the sync window is 90 days; older messages are pruned.</li>
+        <li><strong>After you unlink or ask for deletion:</strong> the store and the account record are removed within 30 days, backups included.</li>
+        <li><strong>Inactive accounts:</strong> after 12 months with no request, we warn the contact address and delete the store 30 days later.</li>
+        <li><strong>Logs:</strong> 7 days for web logs, 30 days for service logs.</li>
+      </ul>
+
+      <h3>Your rights</h3>
+      <p>Under the GDPR you may request access, correction, erasure, restriction, portability, and object to processing. Mail <a href="mailto:privacy@wacli.me">privacy@wacli.me</a>; identity is verified through the linked account. You can also complain to your national data protection authority.</p>
+      <p>Legal basis: performing the contract you asked for (Art. 6(1)(b)) for running the service, and legitimate interest (Art. 6(1)(f)) for abuse defence and operational logs.</p>
+
+      <h3>The other people in your chats</h3>
+      <p>A conversation has two sides, and the other side did not sign up here. Storing your own copy of your own conversations is ordinarily yours to do — the same copy your phone and WhatsApp Web hold. If you use this in a business context, that copy is a processing activity you are responsible for, and you may owe your contacts an explanation. We can sign a data processing agreement; ask.</p>
+
+      <h3>Disclosure</h3>
+      <p>We disclose data only when legally compelled by a competent authority, and will tell you unless we are forbidden to. We have never received such a request.</p>
+
+      <h3>Changes</h3>
+      <p>Material changes are announced to the contact address on the account at least 14 days before they take effect. The date at the top marks the current version.</p>
+    </div>
+  </section>

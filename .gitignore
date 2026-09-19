@@ -1,0 +1,10 @@
+node_modules/
+config/tenants.json
+config/provider.json
+config/*.txt
+bin/
+logs/
+stores/
+web/
+*.log
+*.local

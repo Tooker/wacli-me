@@ -1,0 +1,47 @@
+# wacli.me
+
+> A hosted Model Context Protocol (MCP) server for your own WhatsApp account.
+> Link the account once with a QR code, the way WhatsApp Web does, and any MCP
+> client — Claude, ChatGPT, an editor, your own agent — can read, search and
+> optionally send. Built on the open-source wacli CLI. Self-hosting is free and
+> documented; the hosted service is a convenience, not a lock-in.
+
+Also known as: hosted wacli, wacli MCP server, WhatsApp MCP server,
+WhatsApp MCP endpoint, WhatsApp for Claude, WhatsApp for ChatGPT.
+
+Endpoint: https://wacli.me/mcp (Streamable HTTP, bearer token per account,
+OAuth 2.1 with dynamic client registration and PKCE).
+
+Status: alpha. One server, no SLA. Free tier is one account with a 90-day
+history window; self-hosted is unlimited.
+
+## Start here
+
+- [Link your WhatsApp](https://wacli.me/connect): scan a QR code, get an endpoint and a token.
+- [Overview](https://wacli.me/docs): quickstart, authentication, transport, addressing chats, errors, limits.
+- [Tool reference](https://wacli.me/docs/tools): all 17 tools with parameters and return shapes.
+- [Use cases](https://wacli.me/use-cases): what people actually do with it.
+
+## How it works
+
+- Thirteen read tools: account status, chats, messages, search, contacts, groups, calls, starred, media, history coverage.
+- Four write tools behind a switch you set while linking: send a message, react, mark a chat read, check whether a number is on WhatsApp.
+- One isolated message store per account. A token reaches exactly one store.
+- Reads run the CLI with its read-only guard; write tools are not registered at all for accounts without write access.
+
+## Running it yourself
+
+- [Self-hosting](https://wacli.me/self-hosting): same code, your hardware, no account here.
+- [Open source](https://wacli.me/open-source): what is MIT-licensed and where it lives.
+- Upstream project: https://github.com/openclaw/wacli
+
+## Policies
+
+- [Security](https://wacli.me/security): isolation, tokens, what the operator can and cannot see.
+- [Privacy](https://wacli.me/privacy): what is stored, where, for how long, and how to have it deleted.
+- [Terms](https://wacli.me/terms) · [Imprint](https://wacli.me/imprint) · [Pricing](https://wacli.me/pricing)
+
+## Not what this is
+
+- Not a WhatsApp Business API product and not affiliated with WhatsApp or Meta.
+- Not a chatbot that answers your contacts. It answers you, about your messages.

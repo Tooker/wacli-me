@@ -1,0 +1,113 @@
+<!--meta {"title":"Self-hosting — wacli.me","description":"Run the whole thing on your own machine: build the CLI, link an account, keep it synced, expose the gateway safely.","nav":"open-source"}-->
+<div class="hero">
+    <h1 class="page">Self-hosting</h1>
+    <p class="lede">
+      The hosted service is a convenience, not a moat. Everything it does, you can run on a spare
+      machine in about twenty minutes. This page is the honest version of that walkthrough,
+      including the parts that are annoying.
+    </p>
+  </div>
+
+  <section>
+    <h2>What you need</h2>
+    <table class="kv">
+      <tr><th>Requirement</th><th>Why</th></tr>
+      <tr><td>A machine that stays awake</td><td>The sync daemon must hold a connection; a laptop that sleeps loses history</td></tr>
+      <tr><td>Go 1.24+</td><td>Builds the wacli binary</td></tr>
+      <tr><td>Node 20+</td><td>Runs the gateway</td></tr>
+      <tr><td>~1 GB disk per busy account</td><td>SQLite store plus any media you download</td></tr>
+      <tr><td>A tunnel or reverse proxy</td><td>Only if you want to reach it from outside the machine</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>1 · Build the CLI</h2>
+    <pre><span class="k">git</span> clone https://github.com/openclaw/wacli
+<span class="k">cd</span> wacli
+<span class="k">go</span> build -tags sqlite_fts5 -ldflags=<span class="s">"-s -w"</span> -o ~/bin/wacli ./cmd/wacli
+~/bin/wacli --version</pre>
+    <div class="note">
+      <p><strong>The build tag matters.</strong> Without <code>-tags sqlite_fts5</code> the store migration fails with <code>no such module: fts5</code>, and full-text search is gone. It is the single most common setup mistake.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>2 · Link an account</h2>
+    <pre><span class="k">wacli</span> --store ~/wa-store auth</pre>
+    <div class="prose">
+      <p>A QR code appears in the terminal; scan it in WhatsApp under <em>Settings → Linked devices</em>. The code expires after about a minute, so have the phone ready. Over SSH the block graphics are often unscannable — link from a real terminal, or render the code to an image first.</p>
+      <p>The store directory now holds device credentials. Anyone who copies it can read that account: <code>chmod 700</code> it, and keep it off shared volumes and backups you do not control.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>3 · Keep it synced</h2>
+    <pre><span class="k">wacli</span> --store ~/wa-store sync</pre>
+    <div class="prose">
+      <p>This is a long-running process, not a cron job. It holds the store lock, streams new messages in, and backfills history. Without it running, your store freezes at whatever it last fetched — the second most common setup mistake.</p>
+      <p>Run it under whatever your system uses to keep services alive: a launchd agent on macOS, a systemd unit on Linux.</p>
+    </div>
+    <pre><span class="c"># /etc/systemd/system/wacli-sync.service</span>
+[Unit]
+Description=wacli sync
+After=network-online.target
+
+[Service]
+ExecStart=/home/you/bin/wacli --store /home/you/wa-store sync
+Restart=always
+RestartSec=10
+User=you
+
+[Install]
+WantedBy=multi-user.target</pre>
+  </section>
+
+  <section>
+    <h2>4 · Run the gateway</h2>
+    <pre><span class="k">npm</span> install --prefix server
+PORT=8787 HOST=127.0.0.1 <span class="k">node</span> server/server.mjs</pre>
+    <div class="prose">
+      <p>Tenants live in a JSON file that the process re-reads every few seconds, so adding an account needs no restart:</p>
+    </div>
+    <pre>{
+  <span class="s">"tenants"</span>: [
+    { <span class="s">"id"</span>: <span class="s">"me"</span>,
+      <span class="s">"token"</span>: <span class="s">"&lt;openssl rand -hex 32&gt;"</span>,
+      <span class="s">"store"</span>: <span class="s">"/home/you/wa-store"</span>,
+      <span class="s">"allowSend"</span>: <span class="k">false</span> }
+  ]
+}</pre>
+    <table class="kv" style="margin-top:20px">
+      <tr><th>Variable</th><th>Default</th><th>Meaning</th></tr>
+      <tr><td><code>PORT</code></td><td>8787</td><td>Listen port</td></tr>
+      <tr><td><code>HOST</code></td><td>127.0.0.1</td><td>Bind address — keep it on loopback</td></tr>
+      <tr><td><code>WACLI_BIN</code></td><td>./bin/wacli</td><td>Path to the CLI</td></tr>
+      <tr><td><code>WACLI_ME_TENANTS</code></td><td>./config/tenants.json</td><td>Tenant file</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>5 · Expose it — carefully</h2>
+    <div class="prose">
+      <p>If the client runs on the same machine, stop here: <code>http://127.0.0.1:8787/mcp</code> is all you need, and nothing is reachable from outside.</p>
+      <p>To reach it from elsewhere, put a TLS terminator in front and leave the service on loopback. A Cloudflare tunnel does this without opening a port or exposing your home IP:</p>
+    </div>
+    <pre><span class="k">cloudflared</span> tunnel --url http://127.0.0.1:8787</pre>
+    <div class="note">
+      <p><strong>Never bind the service to 0.0.0.0 on a public network.</strong> The token is the only thing between the internet and your message history, and a plaintext HTTP hop hands it to anyone on the path.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Operational reality</h2>
+    <div class="facts">
+      <div class="fact"><p><strong>Sessions drop.</strong> WhatsApp logs linked devices out now and then. Watch <code>account_status</code>; re-linking means another QR scan, in person.</p></div>
+      <div class="fact"><p><strong>Old CLI versions get refused.</strong> A <code>client outdated</code> error in the sync log means rebuilding from a current tag. Pin a version you tested.</p></div>
+      <div class="fact"><p><strong>One writer per store.</strong> The sync daemon holds the lock. Read commands are fine alongside it; a second writer is not.</p></div>
+      <div class="fact"><p><strong>Back up deliberately.</strong> The store is one directory. Copying it copies the credentials too — encrypt the backup or skip it.</p></div>
+    </div>
+    <div class="cta">
+      <a class="btn ghost" href="/docs">Read the protocol docs</a>
+      <a class="btn ghost" href="/security">Security model</a>
+    </div>
+  </section>

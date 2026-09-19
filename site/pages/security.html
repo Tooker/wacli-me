@@ -1,0 +1,57 @@
+<!--meta {"title": "Security — wacli.me", "description": "How the gateway is secured, what it stores, and the risks we will not talk you out of."}-->
+<div class="hero">
+    <h1 class="page">Security</h1>
+    <p class="lede">
+      This service reads your private messages. That deserves a straight description of how it is
+      built and where the sharp edges are, not a page of badges.
+    </p>
+  </div>
+
+  <section>
+    <h2>How it is built</h2>
+    <div class="prose">
+      <h3>One store per account</h3>
+      <p>Every linked account gets its own directory and its own SQLite database. The gateway resolves your bearer token to exactly one store and constructs the tools against it per request. There is no shared query path where one account could see another's rows.</p>
+
+      <h3>Token authentication</h3>
+      <p>Every MCP request carries <code>Authorization: Bearer …</code>. Tokens are 32 random bytes, compared in constant time, and never logged. An unauthenticated request gets a 401 before any code touches a store.</p>
+
+      <h3>Reads and writes are separated</h3>
+      <p>Reads invoke the CLI with its <code>--read-only</code> flag, which refuses anything that would write to WhatsApp or the local store. The four write tools are not merely disabled for accounts without write access — they are never registered, so a client cannot see them or call them. Whether your account has write access is a single choice you make while linking; declining it leaves you with the thirteen read tools and nothing else.</p>
+      <p>The write switch covers more than sending. Reacting to a message, marking a chat read and checking whether a number is on WhatsApp all reach outside your own store: two of them change what someone else sees, and the third asks WhatsApp about a stranger. Anything with an effect beyond your own device sits behind the same switch.</p>
+
+      <h3>Transport</h3>
+      <p>The service listens on loopback only and is published through a TLS-terminating tunnel. The port is never exposed directly to the internet.</p>
+
+      <h3>Encryption, honestly stated</h3>
+      <p>WhatsApp is end-to-end encrypted between devices. Your linked device decrypts messages in order to show them to you — and that is what this is. The synced history sits on disk in a database the host can read. Full-disk encryption protects a stolen machine, not a compromised one.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Risks we will not talk you out of</h2>
+    <div class="facts">
+      <div class="fact"><p><strong>A token is your inbox.</strong> Anyone holding it can read everything the account has synced. Treat it like a password; ask for a rotation the moment it leaks.</p></div>
+      <div class="fact"><p><strong>Automation can get an account banned.</strong> WhatsApp's terms are aimed at humans using clients. Bulk or bot-like sending risks your number — keep sending conversational.</p></div>
+      <div class="fact"><p><strong>Your client sees what it reads.</strong> Messages you pull go to whichever assistant you connected, under that vendor's policy. Choose the client with that in mind.</p></div>
+      <div class="fact"><p><strong>Other people did not opt in.</strong> A chat has a second party. Reading your own history is yours to decide; forwarding someone's message into a tool is a judgement call you own.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Your controls</h2>
+    <ul>
+      <li><strong>Unlink from the phone.</strong> WhatsApp → Linked devices → remove. Access stops immediately, independent of us.</li>
+      <li><strong>Rotate the token.</strong> One request; the old token stops working at once.</li>
+      <li><strong>Delete the store.</strong> Ask, and the account's directory and database are removed — with the synced history in them.</li>
+      <li><strong>Leave entirely.</strong> Export the SQLite store, move it to your own host, tell us to delete ours.</li>
+    </ul>
+    <div class="note">
+      <p><strong>Alpha means alpha.</strong> No external audit has been done, there is no uptime commitment, and tokens may be rotated for operational reasons. Do not put an account through this that you cannot afford to have interrupted.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Reporting a vulnerability</h2>
+    <p>Mail <a href="mailto:security@wacli.me">security@wacli.me</a> with enough detail to reproduce. We will confirm within a few days, keep you posted while it is fixed, and credit you if you want the credit. Please do not test against accounts that are not yours.</p>
+  </section>

@@ -1,0 +1,10 @@
+{
+  "tenants": [
+    {
+      "id": "demo",
+      "token": "replace-me-with-32-random-bytes",
+      "store": "/absolute/path/to/stores/demo",
+      "allowSend": false
+    }
+  ]
+}

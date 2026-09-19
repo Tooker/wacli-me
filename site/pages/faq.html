@@ -1,0 +1,83 @@
+<!--meta {"title":"FAQ — wacli.me","description":"Straight answers about linking, safety, bans, data, clients and what this is not."}-->
+<div class="hero">
+    <h1 class="page">Questions</h1>
+    <p class="lede">
+      The ones people actually ask, answered without hedging. If yours is missing,
+      <a href="mailto:hello@wacli.me">write</a> and it gets added here.
+    </p>
+  </div>
+
+  <section>
+    <h2>Getting started</h2>
+    <div class="prose">
+      <h3>Do I need to install anything?</h3>
+      <p>No. You link an account with a QR code and paste a URL and a token into your MCP client. If you would rather run everything yourself, the <a href="/self-hosting">self-hosting guide</a> covers it.</p>
+
+      <h3>Which clients work?</h3>
+      <p>Anything that speaks MCP over HTTP with a custom header: Claude Code today, and any client that lets you add a remote server with an <code>Authorization</code> header. Some apps only accept OAuth connectors so far — for those, run the gateway locally over stdio until <a href="/roadmap">OAuth lands</a>.</p>
+
+      <h3>Can I connect more than one client?</h3>
+      <p>Yes. The token is not tied to a device or a session, so your editor, your phone assistant and a cron job can all use the same endpoint at once.</p>
+
+      <h3>Does my phone have to stay online?</h3>
+      <p>No. A linked device keeps working while the phone is off — the same way WhatsApp Web does. The phone matters for linking, not for reading afterwards.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Reach and limits</h2>
+    <div class="prose">
+      <h3>Can it message a number I have never written to?</h3>
+      <p>Yes, when sending is enabled for your account: <code>send_message</code> takes a plain phone number in international format and starts a new conversation. Check first with <code>check_numbers_on_whatsapp</code> so you do not write into the void — that tool asks WhatsApp whether a number is registered at all.</p>
+
+      <h3>Can it read group chats?</h3>
+      <p>Yes, groups are ordinary chats. <code>list_groups</code> and <code>get_group</code> add the parts a chat list does not show: subject, description, participants and who the admins are.</p>
+
+      <h3>Can it see photos and documents?</h3>
+      <p><code>get_media</code> fetches the attachment of one specific message on request. Images come back as images, so a model can actually look at them; other file types report their type and size. Nothing is downloaded in the background.</p>
+
+      <h3>What about voice notes, stickers, polls?</h3>
+      <p>They appear in message listings as messages of that type. Transcription is not part of this — if you want a voice note turned into text, hand the file to a tool that does that job.</p>
+
+      <h3>How far back does history go?</h3>
+      <p>As far as the account synced. WhatsApp hands a linked device a limited backfill, and the free tier keeps a 90-day window. <code>history_coverage</code> tells you per chat what is actually there before you go searching for something that was never synced.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Risk and safety</h2>
+    <div class="prose">
+      <h3>Can my number get banned?</h3>
+      <p>It can. WhatsApp's terms are written for humans using clients, and unusual sending patterns get numbers restricted — that decision is theirs and cannot be appealed by us. Reading is quiet; bulk or bot-like sending is the risky part, which is why sending is off by default and why bulk tooling is explicitly <a href="/roadmap">not planned</a>.</p>
+
+      <h3>Is this a WhatsApp Business API thing?</h3>
+      <p>No. The official Business API is a different product with templates, per-message fees and approvals. This links a normal account as a device, like a desktop client — cheaper and more flexible, but with none of the official guarantees.</p>
+
+      <h3>What if my token leaks?</h3>
+      <p>Ask for a rotation; the old token dies immediately. Until then, assume anyone holding it can read everything the account has synced. That is why the token deserves password-manager treatment.</p>
+
+      <h3>Can you read my messages?</h3>
+      <p>The operator can technically reach the machine — that is true of every hosted service, and pretending otherwise would be a lie. What we commit to is in <a href="/privacy">Privacy</a>: no reading out of curiosity, no analytics on content, no training, no sharing. If that trust is a problem, self-host; the code is the same.</p>
+
+      <h3>What about the other people in my chats?</h3>
+      <p>They did not sign up here. Keeping a copy of your own conversations is ordinarily yours to do, but pushing someone's message into an assistant is a judgement call you own — and in a business context it is a processing activity you are responsible for.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Money and continuity</h2>
+    <div class="prose">
+      <h3>What does it cost?</h3>
+      <p>Nothing today. There is no payment flow at all during the alpha, and pricing will be announced with at least 30 days' notice. See <a href="/pricing">Pricing</a>.</p>
+
+      <h3>What if you disappear?</h3>
+      <p>The store is a plain SQLite directory and the gateway is a small Node service. Export the store, run it yourself, done. That is the point of keeping it open source and boring.</p>
+
+      <h3>Why should I trust an alpha with my WhatsApp?</h3>
+      <p>Maybe you should not — yet. Link a secondary account, keep sending off, and see whether the thing behaves. That is a perfectly reasonable way to evaluate this, and it is what we would do.</p>
+    </div>
+    <div class="cta">
+      <a class="btn" href="/docs">Read the docs</a>
+      <a class="btn ghost" href="/security">Security model</a>
+    </div>
+  </section>

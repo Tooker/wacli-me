@@ -1,0 +1,116 @@
+<!--meta {"title":"Link your WhatsApp — wacli.me","description":"Scan one QR code and your account is reachable from any MCP client. Takes about a minute.","head":"<style>\n  .link-grid{display:grid;gap:34px;grid-template-columns:minmax(300px,380px) 1fr;align-items:start}\n  .qr-box{border:1px solid var(--line);background:var(--bg-soft);border-radius:var(--radius);padding:26px;text-align:center}\n  .qr-frame{width:280px;height:280px;margin:0 auto;display:grid;place-items:center;background:#fff;border-radius:10px;padding:12px}\n  .qr-frame svg{width:100%;height:100%;display:block}\n  .qr-idle{color:#63756d;font-size:14px;padding:0 20px;line-height:1.5}\n  .countdown{margin-top:16px;font-family:var(--mono);font-size:13px;color:var(--ink-faint)}\n  .countdown strong{color:var(--accent)}\n  .countdown.stale strong{color:var(--warn)}\n  .state{margin-top:14px;font-size:14.5px;color:var(--ink-dim);min-height:22px}\n  .state.err{color:var(--warn)}\n  .steps-list{counter-reset:s;list-style:none;padding:0;margin:0}\n  .steps-list li{counter-increment:s;position:relative;padding:0 0 22px 46px;color:var(--ink-dim);font-size:15px}\n  .steps-list li::before{content:counter(s);position:absolute;left:0;top:-2px;width:30px;height:30px;display:grid;place-items:center;border-radius:9px;background:var(--accent-soft);color:var(--accent);font-family:var(--mono);font-size:13px}\n  .steps-list strong{display:block;color:var(--ink);font-weight:600;margin-bottom:4px}\n  .result{display:none}\n  .result.on{display:block}\n  .token-box{display:flex;gap:10px;align-items:center;border:1px solid var(--line);background:var(--bg-code);border-radius:12px;padding:14px 16px;margin:0 0 14px}\n  .token-box code{flex:1;word-break:break-all;font-size:12.5px;color:var(--ink)}\n  .copy{flex:none;background:var(--accent);color:#04150e;border:0;border-radius:8px;padding:9px 14px;font:500 13.5px var(--sans);cursor:pointer}\n  .copy:hover{background:#2ee094}\n  .tabs{display:flex;gap:8px;margin:0 0 14px;flex-wrap:wrap}\n  .tab-btn{background:transparent;border:1px solid var(--line);color:var(--ink-dim);border-radius:999px;padding:8px 16px;font:400 13.5px var(--sans);cursor:pointer}\n  .tab-btn[aria-selected=\"true\"]{border-color:rgba(0,209,127,.4);background:var(--accent-soft);color:var(--accent)}\n  .panel[hidden]{display:none}\n  @media(max-width:820px){.link-grid{grid-template-columns:1fr}}\n</style>","scripts":"<script src=\"/qrcode.min.js\"></script>\n<script src=\"/connect.js\"></script>"}-->
+<div class="hero">
+    <h1 class="page">Link your WhatsApp</h1>
+    <p class="lede">
+      One QR code, about a minute. Your account becomes reachable from any MCP client —
+      and stays yours: unlink it from your phone whenever you want.
+      <br><span style="font-size:15px">Most clients can send you here themselves: add
+      <code>https://wacli.me/mcp</code> as a server and let it ask for authorization — then
+      there is no token to copy at all.</span>
+    </p>
+  </div>
+
+  <section>
+    <div class="note" id="oauth-banner" hidden style="margin-bottom:26px">
+      <p><strong><span id="oauth-client">A client</span> is asking to connect.</strong> Link your WhatsApp below and you will be sent straight back — no token to copy, nothing to paste. Only continue if you started this from your own client.</p>
+    </div>
+
+    <div class="link-grid">
+
+      <div class="qr-box">
+        <div class="qr-frame" id="qr">
+          <span class="qr-idle" id="qr-idle">Asking WhatsApp for a code…</span>
+        </div>
+        <p class="countdown" id="countdown" hidden>Code expires in <strong id="secs">60</strong>s · a fresh one appears automatically</p>
+        <p class="state" id="state"></p>
+        <button class="btn" id="start" hidden style="margin-top:18px">Start linking</button>
+        <label style="display:flex;gap:9px;align-items:flex-start;margin-top:18px;text-align:left;font-size:13.5px;color:var(--ink-faint)">
+          <input type="checkbox" id="allow-send" checked style="margin-top:3px">
+          <span>Allow sending messages, reacting and marking chats read. Uncheck to link read-only — you can change this until you scan.</span>
+        </label>
+      </div>
+
+      <div>
+        <ol class="steps-list">
+          <li>
+            <strong>Open WhatsApp on your phone</strong>
+            Settings → <em>Linked devices</em> → <em>Link a device</em>. On Android it sits behind the three-dot menu.
+          </li>
+          <li>
+            <strong>Scan the code on the left</strong>
+            It appears by itself — nothing to press. It is WhatsApp's own linking code, the same one WhatsApp Web shows. It expires after a minute; this page keeps replacing it, so there is no rush.
+          </li>
+          <li>
+            <strong>Copy your endpoint and token</strong>
+            They appear here the moment WhatsApp confirms. The token is shown once — put it somewhere safe.
+          </li>
+          <li>
+            <strong>Paste both into your client</strong>
+            Instructions for Claude, ChatGPT and everything else appear below once you are linked.
+          </li>
+        </ol>
+
+        <div class="note">
+          <p><strong>What this does on our side.</strong> Linking creates a device session and a private store for your account, and syncs your history into it so search works. Nobody else's token can reach that store. Ask us to delete it and it is gone — see <a href="/privacy">Privacy</a> and <a href="/security">Security</a>.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="result" id="result">
+    <h2>You're linked</h2>
+    <p class="lede" style="margin-bottom:22px">Add these two values to your MCP client. The token is a password for your message history — treat it like one.</p>
+
+    <div class="token-box">
+      <code id="url-out">https://wacli.me/mcp</code>
+      <button class="copy" data-copy="url-out">Copy URL</button>
+    </div>
+    <div class="token-box">
+      <code id="token-out">—</code>
+      <button class="copy" data-copy="token-out">Copy token</button>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button class="tab-btn" role="tab" aria-selected="true" data-panel="p-claude-code">Claude Code</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-panel="p-chatgpt">ChatGPT</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-panel="p-desktop">Claude Desktop</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-panel="p-json">Config file</button>
+    </div>
+
+    <div class="panel" id="p-claude-code">
+      <pre id="cmd-claude"><span class="k">claude</span> mcp add --transport http whatsapp <span class="s">https://wacli.me/mcp</span> \
+  --header <span class="s">"Authorization: Bearer &lt;token&gt;"</span></pre>
+      <p class="hint">Then ask it something: <em>“What did I miss in the family group since Friday?”</em></p>
+    </div>
+
+    <div class="panel" id="p-chatgpt" hidden>
+      <p>Settings → <strong>Connectors</strong> → <strong>Add custom connector</strong>, then:</p>
+      <table class="kv">
+        <tr><td>Name</td><td>WhatsApp</td></tr>
+        <tr><td>MCP server URL</td><td><code>https://wacli.me/mcp</code></td></tr>
+        <tr><td>Authentication</td><td>Header / API key: <code>Authorization: Bearer &lt;token&gt;</code></td></tr>
+      </table>
+      <p class="hint">Custom connectors need a paid ChatGPT plan, and the option is rolled out per account — if you cannot see it, use Claude Code or any local client instead.</p>
+    </div>
+
+    <div class="panel" id="p-desktop" hidden>
+      <p>Settings → <strong>Connectors</strong> → <strong>Add custom connector</strong> → paste the URL, then add the <code>Authorization</code> header. Remote MCP servers need a recent version; if the header field is missing, update first.</p>
+    </div>
+
+    <div class="panel" id="p-json" hidden>
+      <pre>{
+  <span class="s">"mcpServers"</span>: {
+    <span class="s">"whatsapp"</span>: {
+      <span class="s">"type"</span>: <span class="s">"http"</span>,
+      <span class="s">"url"</span>: <span class="s">"https://wacli.me/mcp"</span>,
+      <span class="s">"headers"</span>: { <span class="s">"Authorization"</span>: <span class="s">"Bearer &lt;token&gt;"</span> }
+    }
+  }
+}</pre>
+    </div>
+
+    <div class="note" style="margin-top:20px">
+      <p><strong>History takes a moment.</strong> Your messages sync in the background after linking. Chats appear within seconds; older history keeps filling for a few minutes. <code>history_coverage</code> tells you how far back it reaches.</p>
+    </div>
+  </section>

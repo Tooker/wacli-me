@@ -1,0 +1,46 @@
+<!--meta {"title":"Isolation by construction, not by filter — wacli.me","description":"Multi-tenancy usually fails in a WHERE clause. Separate databases and per-request servers make that class of bug unwritable.","nav":"blog"}-->
+<div class="hero">
+    <h1 class="page">Isolation by construction, not by filter</h1>
+    <p class="post-meta">build notes</p>
+  </div>
+
+  <section>
+    <div class="prose post">
+      <p>Almost every multi-tenant data leak has the same shape. One table holds everyone's rows, a column says who owns each one, and exactly one query forgets to mention that column.</p>
+
+      <pre><span class="c">-- the bug that keeps happening</span>
+SELECT * FROM messages WHERE chat_id = ?      <span class="c">-- whose messages?</span></pre>
+
+      <p>Code review catches it most of the time. Most of the time is a strange standard to apply to somebody's private conversations.</p>
+
+      <h3>Different databases, not different rows</h3>
+
+      <p>So there is no shared messages table here. Every linked account gets its own directory with its own SQLite file, written by its own sync process. The gateway never queries a database directly: it runs the CLI with <code>--store /path/for/this/account</code>, and that path comes from the bearer token.</p>
+
+      <p>The consequence is that the dangerous query cannot be written. There is no row belonging to someone else within reach of the process handling your request — not filtered out, not present. A missing condition returns your own data twice, not a stranger's once.</p>
+
+      <h3>One server object per request</h3>
+
+      <p>The MCP session is stateless on purpose. Each request constructs a fresh server, registers tools bound to one store, answers, and is thrown away:</p>
+
+      <pre><span class="k">const</span> server = buildServer(tenant);   <span class="c">// tools closed over this tenant's store</span>
+<span class="k">const</span> transport = <span class="k">new</span> StreamableHTTPServerTransport({ sessionIdGenerator: <span class="k">undefined</span> });
+<span class="k">await</span> server.connect(transport);
+<span class="k">await</span> transport.handleRequest(req, res, body);</pre>
+
+      <p>Nothing survives between requests, so there is nothing to mix up. It costs a few milliseconds of object construction, which is invisible next to a call that shells out to a CLI. A restart cannot interrupt a session, because there is no session to interrupt.</p>
+
+      <h3>The capability is the registration</h3>
+
+      <p>The same idea governs write access. An account without it does not get a disabled <code>send_message</code> tool — it gets a server on which that tool was never registered. <code>tools/list</code> does not mention it, and calling it by name fails as an unknown method. There is no flag to misread at call time, because the decision was made when the server was built.</p>
+
+      <h3>What this does not solve</h3>
+
+      <p>It contains a mistake in request handling. It does nothing about the host itself: root on the machine reads every store, and no amount of per-tenant structure changes that. Full-disk encryption protects a stolen disk, not a live compromise. That is the honest limit of any hosted service, and it is exactly why the <a href="/self-hosting">self-hosting path</a> gets a real guide rather than a footnote.</p>
+
+      <div class="next-prev">
+        <span><a href="/blog/why-mcp-for-whatsapp">← Why MCP</a></span>
+        <span><a href="/blog/read-only-by-default">Why sending is off by default →</a></span>
+      </div>
+    </div>
+  </section>

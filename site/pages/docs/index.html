@@ -1,0 +1,141 @@
+<!--meta {"title":"Documentation — wacli.me","description":"Quickstart, authentication, transport details, limits and error handling for the wacli.me MCP endpoint.","nav":"docs"}-->
+<div class="hero">
+    <h1 class="page">Documentation</h1>
+    <p class="lede">
+      Everything needed to connect a client and understand what happens on the other side.
+      The endpoint speaks the Model Context Protocol over Streamable HTTP; there is no SDK to
+      install and no proprietary client.
+    </p>
+  </div>
+
+  <section>
+    <div class="toc">
+      <h4>On this page</h4>
+      <ol>
+        <li><a href="#quickstart">Quickstart</a></li>
+        <li><a href="#auth">Authentication</a></li>
+        <li><a href="#transport">Transport and protocol</a></li>
+        <li><a href="#jids">Addressing chats: JIDs</a></li>
+        <li><a href="#errors">Errors</a></li>
+        <li><a href="#limits">Limits</a></li>
+      </ol>
+    </div>
+
+    <div class="prose" id="quickstart">
+      <h2 style="margin-bottom:18px">Quickstart</h2>
+      <p>Three steps, about two minutes.</p>
+    </div>
+
+    <div class="grid steps" style="margin-bottom:26px">
+      <div class="card">
+        <h3>Link the account</h3>
+        <p>You get a QR code. Scan it in WhatsApp under <em>Linked devices</em>. The service then syncs your history into a store that belongs to you alone.</p>
+      </div>
+      <div class="card">
+        <h3>Take your token</h3>
+        <p>32 random bytes, hex encoded. It is the only credential; treat it the way you treat a password manager entry.</p>
+      </div>
+      <div class="card">
+        <h3>Add the server</h3>
+        <p>Point any MCP client at <code>/mcp</code> with an <code>Authorization</code> header. The tools appear immediately.</p>
+      </div>
+    </div>
+
+    <pre><span class="c"># Claude Code</span>
+<span class="k">claude</span> mcp add --transport http whatsapp <span class="s">https://wacli.me/mcp</span> \
+  --header <span class="s">"Authorization: Bearer &lt;your-token&gt;"</span>
+
+<span class="c"># Config file form, understood by most clients</span>
+{
+  <span class="s">"mcpServers"</span>: {
+    <span class="s">"whatsapp"</span>: {
+      <span class="s">"type"</span>: <span class="s">"http"</span>,
+      <span class="s">"url"</span>: <span class="s">"https://wacli.me/mcp"</span>,
+      <span class="s">"headers"</span>: { <span class="s">"Authorization"</span>: <span class="s">"Bearer &lt;your-token&gt;"</span> }
+    }
+  }
+}</pre>
+    <p class="hint">Verify it works without a client: <code>curl https://wacli.me/healthz</code> returns the service version.</p>
+  </section>
+
+  <section id="auth">
+    <h2>Authentication</h2>
+    <div class="prose">
+      <p>Every request to <code>/mcp</code> carries a bearer token:</p>
+    </div>
+    <pre><span class="k">Authorization</span>: Bearer 9f3c…&lt;64 hex characters&gt;</pre>
+    <div class="prose">
+      <p>The token resolves to exactly one account store. There are no user names, no sessions and no cookies — a request either carries a valid token or is refused with <code>401</code> before anything reads a database.</p>
+      <p>Tokens are compared in constant time and never written to logs. If one leaks, ask for a rotation: the old value stops working the moment the new one is issued, and clients only need the header updated.</p>
+      <h3 style="margin-top:28px">Or skip the token entirely</h3>
+      <p>The server is also an OAuth 2.1 authorization server, which is what most MCP clients try first. Add <code>https://wacli.me/mcp</code> with no credentials: the client discovers the authorization server from the <code>401</code>, registers itself, opens a browser, you scan the WhatsApp QR code there, and the client collects its own token. Nothing is copied by hand.</p>
+      <table class="kv" style="margin-top:16px">
+        <tr><th>Endpoint</th><th>Purpose</th></tr>
+        <tr><td><code>/.well-known/oauth-protected-resource</code></td><td>Points at the authorization server</td></tr>
+        <tr><td><code>/.well-known/oauth-authorization-server</code></td><td>Metadata: endpoints, PKCE support</td></tr>
+        <tr><td><code>/oauth/register</code></td><td>Dynamic client registration (RFC 7591)</td></tr>
+        <tr><td><code>/oauth/authorize</code></td><td>Shows the linking page, returns a code</td></tr>
+        <tr><td><code>/oauth/token</code></td><td>Exchanges code + PKCE verifier for a token</td></tr>
+      </table>
+      <p class="hint">PKCE with S256 is required, codes are single-use and expire after five minutes, and a redirect URI must match the client's registration exactly.</p>
+    </div>
+  </section>
+
+  <section id="transport">
+    <h2>Transport and protocol</h2>
+    <table class="kv">
+      <tr><th>Property</th><th>Value</th></tr>
+      <tr><td>Transport</td><td><code>Streamable HTTP</code> — POST for requests, server-sent events for responses</td></tr>
+      <tr><td>Protocol version</td><td><code>2025-06-18</code>, negotiated during <code>initialize</code></td></tr>
+      <tr><td>Session model</td><td>Stateless: one server instance per request, no session id to track</td></tr>
+      <tr><td>Capabilities</td><td><code>tools</code> only — no prompts, no resources, no sampling</td></tr>
+      <tr><td>Content type</td><td>Request <code>application/json</code>, accept <code>application/json, text/event-stream</code></td></tr>
+    </table>
+    <div class="prose" style="margin-top:22px">
+      <p>Stateless is deliberate. Every request builds its own server object bound to one store, so a bug in request handling cannot leak state between accounts, and a restart never invalidates a session someone was in the middle of.</p>
+    </div>
+  </section>
+
+  <section id="jids">
+    <h2>Addressing chats: JIDs</h2>
+    <div class="prose">
+      <p>WhatsApp identifies conversations with a JID, and every tool that takes a <code>chat</code> argument expects one:</p>
+      <ul>
+        <li><code>4917612345678@s.whatsapp.net</code> — a person, addressed by phone number</li>
+        <li><code>123456789012345678@lid</code> — a linked id, the pseudonymous form most contacts have had since 2024</li>
+        <li><code>12036301234567890@g.us</code> — a group</li>
+      </ul>
+      <p>You rarely type one by hand. Call <code>list_chats</code> or <code>search_contacts</code> with a name, take the <code>jid</code> field from the result, and pass it on. The <code>send_message</code> tool additionally accepts a plain phone number or an exact chat name and resolves it itself.</p>
+    </div>
+  </section>
+
+  <section id="errors">
+    <h2>Errors</h2>
+    <table class="kv">
+      <tr><th>Situation</th><th>What you get</th></tr>
+      <tr><td>Missing or wrong token</td><td>HTTP <code>401</code> with a JSON-RPC error, code <code>-32001</code></td></tr>
+      <tr><td>Malformed JSON body</td><td>HTTP <code>400</code>, code <code>-32700</code></td></tr>
+      <tr><td>Tool fails (account not linked, bad JID, locked store)</td><td>HTTP <code>200</code> with <code>isError: true</code> and the CLI's message as text</td></tr>
+      <tr><td>Unknown tool name</td><td>Standard MCP method error from the SDK</td></tr>
+      <tr><td>Service down</td><td>Connection refused or a <code>5xx</code> from the edge — see <a href="/status">status</a></td></tr>
+    </table>
+    <div class="prose" style="margin-top:22px">
+      <p>Tool failures are returned as tool errors rather than protocol errors on purpose: an assistant can read the message, correct the argument and try again, which is what you want when it guessed a JID wrong.</p>
+    </div>
+  </section>
+
+  <section id="limits">
+    <h2>Limits</h2>
+    <table class="kv">
+      <tr><th>Limit</th><th>Value</th></tr>
+      <tr><td>Results per call</td><td>1–200, default 25</td></tr>
+      <tr><td>Request body</td><td>1 MB</td></tr>
+      <tr><td>Tool timeout</td><td>60 seconds</td></tr>
+      <tr><td>History window</td><td>90 days on the free tier</td></tr>
+      <tr><td>Sending</td><td>Disabled unless requested for the account</td></tr>
+    </table>
+    <div class="cta">
+      <a class="btn" href="/docs/tools">Tool reference</a>
+      <a class="btn ghost" href="/self-hosting">Run it yourself</a>
+    </div>
+  </section>
