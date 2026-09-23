@@ -10,22 +10,19 @@
 
   <section>
     <h2>The short way</h2>
-    <p>Two commands. The image builds the CLI with the right flags, so the mistake described further down cannot happen to you.</p>
-    <pre><span class="k">git</span> clone https://github.com/wacli-me/wacli-me &amp;&amp; cd wacli-me
-<span class="k">docker</span> build -t wacli-me .
-
-<span class="k">docker</span> run -d --name wacli-me \
+    <p>One command. The image builds the CLI with the right flags, so the mistake described further down cannot happen to you.</p>
+    <pre><span class="k">docker</span> run -d --name wacli-me \
   -p 127.0.0.1:8787:8787 \
   -v wacli-stores:/app/stores \
   -v wacli-config:/app/config \
   -e WACLI_DEVICE_LABEL=your-domain.example \
-  wacli-me</pre>
+  ghcr.io/wacli-me/wacli-me:latest</pre>
     <p>Then link an account by opening <code>http://127.0.0.1:8787/connect</code> and scanning the code. The two volumes hold the message stores and the account file; keep them, or every linked account is gone.</p>
     <div class="note">
       <p><strong>Set <code>WACLI_DEVICE_LABEL</code> to something you recognise.</strong> Whatever it says is what appears under <em>Linked devices</em> in WhatsApp. Leave it unset and a container id shows up on the phone of whoever linked the account.</p>
       <p><strong>Do not publish port 8787 straight to the internet.</strong> The example binds it to localhost on purpose — put a tunnel or a TLS terminator in front, as described in step 5.</p>
     </div>
-    <p>The build takes a few minutes, most of it compiling the CLI. <code>--build-arg WACLI_VERSION=v0.18.2</code> pins which CLI version goes in; the default is the one this gateway is tested against. A prebuilt image is coming, and this page will say so when it exists rather than before.</p>
+    <p>Prefer to build it yourself? <code>docker build -t wacli-me .</code> from a clone of <a href="https://github.com/wacli-me/wacli-me">the repository</a> produces the same image; it takes a few minutes, most of it compiling the CLI. <code>--build-arg WACLI_VERSION=v0.18.2</code> pins which CLI version goes in.</p>
   </section>
 
   <section>

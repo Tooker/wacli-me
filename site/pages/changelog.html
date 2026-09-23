@@ -11,7 +11,19 @@
     <div class="timeline">
 
       <div class="entry">
-        <h3>0.2.1 — the source goes public <span class="pill live">current</span></h3>
+        <h3>0.3.0 — plans, and self-hosting in two commands <span class="pill live">current</span></h3>
+        <ul>
+          <li>Paid plans exist. Free stays a real tier — 50 tool calls a month, dormant chats pruned after 30 days, and a store deleted after 14 days with no request. Pro lifts all three. See <a href="/pricing">Pricing</a>.</li>
+          <li>Only tool calls count against the allowance. Connecting, and a client listing the available tools, do not — some clients do that on every start.</li>
+          <li><code>account_status</code> reports the plan, how much of the month's allowance is left and when it resets, so a client can pace itself instead of discovering the limit at an error.</li>
+          <li><strong>A Dockerfile.</strong> Self-hosting was: install Go, build the CLI with exactly the right tag, install Node, wire it together. It is now <code>docker build</code> and <code>docker run</code>, with the build tag baked in so the most common setup mistake cannot happen. Images are published to <a href="https://github.com/wacli-me/wacli-me/pkgs/container/wacli-me">ghcr.io</a>.</li>
+          <li>Fonts are served from this domain instead of Google Fonts. The site now makes no third-party requests at all.</li>
+          <li>Provider details are real, sub-processors are named, and there is an <a href="/dpa">Article 28 processing agreement</a> you can accept while linking.</li>
+        </ul>
+      </div>
+
+      <div class="entry">
+        <h3>0.2.1 — the source goes public</h3>
         <ul>
           <li>The gateway is on GitHub under MIT: <a href="https://github.com/wacli-me/wacli-me">github.com/wacli-me/wacli-me</a> — server, linking flow, OAuth, deploy scripts and this website's sources.</li>
           <li>Fixed: a malformed percent-encoded path such as <code>/%</code> raised a decoding error out of the request handler and ended the process. It now answers <code>400</code>, and no exception can take the server down with it.</li>
