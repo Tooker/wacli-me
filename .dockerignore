@@ -1,6 +1,5 @@
 docs/
-site/
-scripts/
+web/
 registry/
 config/
 stores/

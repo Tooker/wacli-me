@@ -42,7 +42,13 @@ COPY server/package.json server/
 RUN cd server && npm install --omit=dev --no-audit --no-fund
 
 COPY server/ server/
-COPY web/ web/
+
+# The site is generated, not committed — building it here means the image is
+# reproducible from the repository alone. The builder uses only Node's own
+# modules, so there is nothing to install for it.
+COPY site/ site/
+COPY scripts/build.mjs scripts/
+RUN node scripts/build.mjs && test -f web/index.html
 
 # Stores hold the message history, config holds tenants and the imprint.
 # Both must outlive the container — mount them or lose every linked account.
