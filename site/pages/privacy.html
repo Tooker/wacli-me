@@ -6,6 +6,7 @@
       account you linked, we do not read it, we do not share it, and you can have it deleted at any
       time.
     </p>
+  <p class="updated">Last updated 23 September 2026</p>
   </div>
 
   <section>
@@ -14,7 +15,7 @@
       <p>Controller under Article 4(7) GDPR for the processing described here is {{provider_short}}.</p>
 
       <h2 style="margin:36px 0 18px">The website</h2>
-      <p>No cookies, no analytics, no tracking pixels, no third-party scripts beyond the web font served by Google Fonts, which sees your IP address when the font loads. Standard web-server logs record IP address, time, path and user agent, and are kept for seven days for abuse defence.</p>
+      <p>No cookies, no analytics, no tracking pixels, no third-party scripts, no third-party fonts. Everything the page needs is served from this domain, so loading it tells nobody but us that you were here. Standard web-server logs record IP address, time, path and user agent, and are kept for seven days for abuse defence.</p>
 
       <h2 style="margin:36px 0 18px">The service</h2>
 
@@ -27,10 +28,21 @@
       </ul>
 
       <h3>Where it is stored</h3>
-      <p>On a single server in Iceland, inside the European Economic Area, in a per-account directory on an encrypted volume. No cloud message database, no replication to other providers.</p>
+      <p>On a single server in Nuremberg, Germany, inside the European Union, in a per-account directory. No cloud message database, no replication to other providers.</p>
+      <p>Encryption at rest is being introduced per account. Until the page says otherwise, treat the store as unencrypted on disk and protected by access control alone. We would rather say that plainly than claim a safeguard we have not finished building.</p>
+
+      <h3>Sub-processors</h3>
+      <p>Three companies touch this service, and none of them for the content of your messages beyond what hosting inherently implies:</p>
+      <ul>
+        <li><strong>Hetzner Online GmbH</strong>, Gunzenhausen, Germany — the server the store lives on.</li>
+        <li><strong>Cloudflare, Inc.</strong> — DNS and the tunnel that publishes the site. Traffic is terminated by Cloudflare, so it sees request metadata; tool results pass through encrypted in transit.</li>
+        <li><strong>1337 Services GmbH (Njalla)</strong> — the domain and the mail forwarding behind the addresses on this page. Mail you send us passes through it.</li>
+      </ul>
+      <p>We add none without changing this list first.</p>
 
       <h3>Who can access it</h3>
       <p>You, through your token. The operator, through the machine — technically unavoidable for any hosted service, and used only for debugging a problem you reported or for the legal reasons below. Nobody else.</p>
+      <p>Be clear about what that means: a hosted service that can search your messages for you can, by construction, read them. Nobody can honestly promise otherwise about this kind of product. If that trade is not one you want to make, <a href="/self-hosting">run it yourself</a> — the code is the same and it is free.</p>
 
       <h3>What we never do</h3>
       <ul>
@@ -45,9 +57,9 @@
 
       <h3>Retention</h3>
       <ul>
-        <li><strong>Messages:</strong> kept while the account is linked. On the Free plan the sync window is 90 days; older messages are pruned.</li>
+        <li><strong>Messages:</strong> kept while the account is linked. On the Free plan a chat with no activity for 30 days is pruned along with its messages; active chats are kept whole. On Pro nothing is pruned.</li>
         <li><strong>After you unlink or ask for deletion:</strong> the store and the account record are removed within 30 days, backups included.</li>
-        <li><strong>Inactive accounts:</strong> after 12 months with no request, we warn the contact address and delete the store 30 days later.</li>
+        <li><strong>Inactive accounts:</strong> on the Free plan, 14 days without a single request and the store is deleted. On Pro the store stays as long as the subscription runs.</li>
         <li><strong>Logs:</strong> 7 days for web logs, 30 days for service logs.</li>
       </ul>
 
@@ -56,7 +68,7 @@
       <p>Legal basis: performing the contract you asked for (Art. 6(1)(b)) for running the service, and legitimate interest (Art. 6(1)(f)) for abuse defence and operational logs.</p>
 
       <h3>The other people in your chats</h3>
-      <p>A conversation has two sides, and the other side did not sign up here. Storing your own copy of your own conversations is ordinarily yours to do — the same copy your phone and WhatsApp Web hold. If you use this in a business context, that copy is a processing activity you are responsible for, and you may owe your contacts an explanation. We can sign a data processing agreement; ask.</p>
+      <p>A conversation has two sides, and the other side did not sign up here. Storing your own copy of your own conversations is ordinarily yours to do — the same copy your phone and WhatsApp Web hold. If you use this in a business context, that copy is a processing activity you are responsible for, and you may owe your contacts an explanation. Our <a href="/dpa">data processing agreement</a> covers that case; accepting it takes a click, not a signature.</p>
 
       <h3>Disclosure</h3>
       <p>We disclose data only when legally compelled by a competent authority, and will tell you unless we are forbidden to. We have never received such a request.</p>

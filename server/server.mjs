@@ -14,6 +14,9 @@ import { ConnectManager, QR_TTL_SECONDS } from "./connect.mjs";
 import { OAuthProvider } from "./oauth.mjs";
 import { SyncManager } from "./sync.mjs";
 import { Provider, FIELDS, esc, substitute, missingForImprint } from "./provider.mjs";
+import { PLANS, planFor, Usage } from "./plans.mjs";
+import { Paddle, planChangeFrom } from "./paddle.mjs";
+import { Retention } from "./retention.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
@@ -24,6 +27,14 @@ const WACLI_BIN = process.env.WACLI_BIN || path.join(root, "bin", "wacli");
 const TENANTS_FILE = process.env.WACLI_ME_TENANTS || path.join(root, "config", "tenants.json");
 const WEB_DIR = path.join(root, "web");
 const PROVIDER_FILE = process.env.WACLI_ME_PROVIDER || path.join(root, "config", "provider.json");
+const USAGE_FILE = process.env.WACLI_ME_USAGE || path.join(root, "config", "usage.json");
+const PADDLE_KEY_FILE = path.join(root, "config", "paddle-api-key.txt");
+const PADDLE_WEBHOOK_FILE = path.join(root, "config", "paddle-webhook-secret.txt");
+const PADDLE_CLIENT_TOKEN_FILE = path.join(root, "config", "paddle-client-token.txt");
+const PADDLE_PRICES = {
+  monthly: "pri_01m36y92k8s7z8ageg4c7pwyjm", // 7.99 EUR / month
+  yearly: "pri_01m36y933sapcacex02v4s0gx0", // 79.00 EUR / year
+};
 const REGISTRY_AUTH_FILE = path.join(root, "config", "mcp-registry-auth.txt");
 const STORES_DIR = process.env.WACLI_ME_STORES || path.join(root, "stores");
 const ISSUER = process.env.WACLI_ME_ISSUER || "https://wacli.me";
@@ -47,6 +58,8 @@ function loadTenants() {
     token: t.token,
     store: t.store,
     allowSend: t.allowSend === true,
+    plan: PLANS[t.plan] ? t.plan : "free",
+    planUntil: t.planUntil || null,
   }));
 }
 
@@ -121,10 +134,40 @@ function buildServer(tenant) {
     "account_status",
     {
       title: "Account status",
-      description: "Health of the linked WhatsApp account: authenticated, store size, last sync.",
+      description:
+        "Health of the linked WhatsApp account: authenticated, store size, last sync, " +
+        "plus the current plan and how much of this month's request allowance is left.",
       inputSchema: {},
     },
-    () => guard(() => wacli.doctor()),
+    () =>
+      guard(async () => {
+        const plan = planFor(tenant);
+        const seen = usage.peek(tenant.id);
+        const limit = plan.requestsPerMonth;
+        return {
+          ...(await wacli.doctor()),
+          plan: plan.id,
+          // A client that can see the ceiling coming can pace itself; one that
+          // only learns at the 429 cannot.
+          requests: {
+            used: seen.used,
+            limit: limit === Infinity ? null : limit,
+            remaining: limit === Infinity ? null : Math.max(0, limit - seen.used),
+            resets: seen.month + " (UTC month)",
+          },
+          historyWindowDays: plan.historyDays,
+          deletedAfterIdleDays: plan.idleDays,
+          ...(plan.id === "free"
+            ? {
+                accountId: tenant.id,
+                upgrade: {
+                  monthly: `${ISSUER}/upgrade?t=${encodeURIComponent(tenant.id)}&cycle=monthly`,
+                  yearly: `${ISSUER}/upgrade?t=${encodeURIComponent(tenant.id)}&cycle=yearly`,
+                },
+              }
+            : {}),
+        };
+      }),
   );
 
   server.registerTool(
@@ -409,6 +452,88 @@ function buildServer(tenant) {
 // ---------------------------------------------------------------- connect ---
 
 const provider = new Provider(PROVIDER_FILE);
+const usage = new Usage(USAGE_FILE);
+const paddle = new Paddle({
+  apiKeyFile: PADDLE_KEY_FILE,
+  webhookSecretFile: PADDLE_WEBHOOK_FILE,
+  clientTokenFile: PADDLE_CLIENT_TOKEN_FILE,
+  prices: PADDLE_PRICES,
+  checkoutUrl: `${ISSUER}/checkout`,
+});
+
+// The webhook and the admin form both edit the same file, so read-modify-write
+// it in one go rather than holding a parsed copy around.
+function patchTenant(tenantId, patch) {
+  const parsed = JSON.parse(fs.readFileSync(TENANTS_FILE, "utf8"));
+  const list = Array.isArray(parsed) ? parsed : parsed.tenants || [];
+  const found = list.find((t) => t.id === tenantId);
+  if (!found) return false;
+  Object.assign(found, patch);
+  fs.writeFileSync(TENANTS_FILE, JSON.stringify(parsed, null, 2), { mode: 0o600 });
+  tenants = loadTenants();
+  return true;
+}
+
+async function handleUpgrade(req, res, url) {
+  const tenantId = url.searchParams.get("t") || "";
+  const cycle = url.searchParams.get("cycle") === "yearly" ? "yearly" : "monthly";
+  const known = tenants.find((t) => t.id === tenantId);
+  if (!known) {
+    sendHtmlMessage(res, 404, "Unknown account", "That account id does not exist. Open the endpoint your client uses and check account_status for the current one.");
+    return;
+  }
+  if (!paddle.configured) {
+    sendHtmlMessage(res, 503, "Checkout not available yet", "Paid plans are not switched on for this host. Nothing is charged and nothing is broken — try again later.");
+    return;
+  }
+  try {
+    const { url: checkout } = await paddle.createCheckout({ tenantId, cycle });
+    res.writeHead(302, { location: checkout, "cache-control": "no-store" });
+    res.end();
+  } catch (err) {
+    console.error(`[upgrade] ${err.message}`);
+    sendHtmlMessage(res, 502, "Could not start the checkout", "Our payment provider did not answer. Nothing was charged. Please try again in a minute.");
+  }
+}
+
+async function handlePaddleWebhook(req, res) {
+  const raw = await readBody(req);
+  const verdict = paddle.verify(raw, req.headers["paddle-signature"]);
+  if (!verdict.ok) {
+    // Anyone can POST here; say as little as possible about why it failed.
+    console.warn(`[paddle] rejected notification: ${verdict.reason}`);
+    sendJson(res, 401, { error: "invalid signature" });
+    return;
+  }
+
+  let event;
+  try {
+    event = JSON.parse(raw);
+  } catch {
+    sendJson(res, 400, { error: "invalid JSON" });
+    return;
+  }
+
+  const change = planChangeFrom(event);
+  // Always 200 for a verified notification, even one we ignore — a non-2xx
+  // makes Paddle retry something that will never succeed.
+  if (!change) {
+    sendJson(res, 200, { ok: true, ignored: event.event_type });
+    return;
+  }
+
+  const applied = patchTenant(change.tenant, {
+    plan: change.plan,
+    planUntil: change.planUntil,
+    paddleSubscriptionId: change.subscriptionId,
+  });
+  console.log(
+    applied
+      ? `[paddle] ${change.tenant} -> ${change.plan} until ${change.planUntil || "n/a"} (${change.reason})`
+      : `[paddle] notification for unknown tenant ${change.tenant} (${change.reason})`,
+  );
+  sendJson(res, 200, { ok: true });
+}
 const sync = new SyncManager({ wacliBin: WACLI_BIN, logDir: path.join(root, "logs") });
 
 const connect = new ConnectManager({
@@ -428,7 +553,7 @@ async function handleConnectStart(req, res) {
     return;
   }
   try {
-    const session = connect.start({ allowSend: body.allowSend === true });
+    const session = connect.start({ allowSend: body.allowSend === true, dpa: body.dpa === true });
     sendJson(res, 200, { session: session.id, qrTtlSeconds: QR_TTL_SECONDS });
   } catch (err) {
     sendJson(res, err.code === "BUSY" ? 503 : 500, { error: err.message });
@@ -449,8 +574,17 @@ async function handleConnectPermissions(req, res) {
     sendJson(res, 404, { error: "unknown or expired session" });
     return;
   }
-  const changed = connect.setAllowSend(session, body.allowSend === true);
-  sendJson(res, changed ? 200 : 409, changed ? { allowSend: session.allowSend } : { error: "session already finished" });
+  // Only the keys actually sent are applied, so toggling one checkbox cannot
+  // silently reset the other.
+  const patch = {};
+  if ("allowSend" in body) patch.allowSend = body.allowSend === true;
+  if ("dpa" in body) patch.dpa = body.dpa === true;
+  const changed = connect.setPermissions(session, patch);
+  sendJson(
+    res,
+    changed ? 200 : 409,
+    changed ? { allowSend: session.allowSend, dpa: session.dpa } : { error: "session already finished" },
+  );
 }
 
 // Sent with navigator.sendBeacon when the tab goes away, so the body may be
@@ -777,6 +911,26 @@ function readBody(req) {
   });
 }
 
+// A plain page for the few moments a visitor lands on an error instead of a
+// checkout. Deliberately not the site layout: this must render even if the
+// build output is missing.
+function sendHtmlMessage(res, status, heading, detail) {
+  const body =
+    `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">` +
+    `<meta name="robots" content="noindex"><title>${esc(heading)} — wacli.me</title>` +
+    `<body style="margin:0;background:#070c0a;color:#e8f2ed;font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh">` +
+    `<main style="max-width:44ch;padding:24px;text-align:center">` +
+    `<h1 style="font-size:21px;margin:0 0 12px">${esc(heading)}</h1>` +
+    `<p style="color:#93a79e;line-height:1.6;margin:0 0 20px">${esc(detail)}</p>` +
+    `<p><a href="/pricing" style="color:#00d17f">Back to pricing</a></p></main>`;
+  res.writeHead(status, {
+    "content-type": "text/html; charset=utf-8",
+    "content-length": Buffer.byteLength(body),
+    "cache-control": "no-store",
+  });
+  res.end(body);
+}
+
 function sendJson(res, status, payload) {
   const body = JSON.stringify(payload);
   res.writeHead(status, { "content-type": "application/json", "content-length": Buffer.byteLength(body) });
@@ -799,6 +953,7 @@ const MIME = {
   ".gif": "image/gif",
   ".ico": "image/x-icon",
   ".webmanifest": "application/manifest+json",
+  ".woff2": "font/woff2",
   ".txt": "text/plain; charset=utf-8",
   ".xml": "application/xml; charset=utf-8",
   ".json": "application/json; charset=utf-8",
@@ -881,6 +1036,27 @@ async function handleMcp(req, res) {
       rpcError(res, 400, -32700, "Parse error: body is not valid JSON.");
       return;
     }
+  }
+
+  // Only tools/call counts against the quota. initialize, tools/list and the
+  // rest are protocol chatter a client makes on every connection; billing them
+  // would mean a client that merely connects burns someone's month.
+  const plan = planFor(tenant);
+  const isToolCall = parsedBody && parsedBody.method === "tools/call";
+  if (isToolCall) {
+    const verdict = usage.consume(tenant.id, plan);
+    if (!verdict.ok) {
+      rpcError(
+        res,
+        429,
+        -32003,
+        `Monthly request limit reached (${verdict.limit} on the ${plan.label} plan). ` +
+          `It resets on the 1st. To lift it: ${ISSUER}/pricing`,
+      );
+      return;
+    }
+  } else {
+    usage.touch(tenant.id);
   }
 
   // Stateless: a fresh server + transport per request, so tenants never share state.
@@ -977,6 +1153,50 @@ function route(req, res) {
     return;
   }
 
+  // Paddle sends the buyer here with ?_ptxn=<transaction>. Paddle.js reads that
+  // parameter itself and opens the overlay; the page only has to exist, load
+  // the script and say something while it does.
+  if (urlPath === "/checkout") {
+    const token = paddle.clientToken;
+    const body = token
+      ? `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">` +
+        `<meta name="robots" content="noindex"><title>Checkout — wacli.me</title>` +
+        `<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>` +
+        `<body style="margin:0;background:#070c0a;color:#e8f2ed;font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh">` +
+        `<main style="max-width:40ch;padding:24px;text-align:center">` +
+        `<h1 style="font-size:20px;margin:0 0 10px">Opening the checkout…</h1>` +
+        `<p style="color:#93a79e;line-height:1.6">Paddle handles the payment and the VAT. If nothing appears, your browser may be blocking it — ` +
+        `<a href="/pricing" style="color:#00d17f">go back</a> and try again.</p></main>` +
+        `<script>Paddle.Initialize({token:${JSON.stringify(token)}});</script>`
+      : null;
+    if (!body) {
+      sendHtmlMessage(res, 503, "Checkout not available yet", "Paid plans are not switched on for this host. Nothing was charged.");
+      return;
+    }
+    res.writeHead(200, {
+      "content-type": "text/html; charset=utf-8",
+      "content-length": Buffer.byteLength(body),
+      "cache-control": "no-store",
+    });
+    res.end(body);
+    return;
+  }
+
+  if (urlPath === "/upgrade") {
+    handleUpgrade(req, res, url).catch(() => {
+      sendHtmlMessage(res, 500, "Something went wrong", "Nothing was charged. Please try again.");
+    });
+    return;
+  }
+
+  if (urlPath === "/api/paddle/webhook" && req.method === "POST") {
+    handlePaddleWebhook(req, res).catch((err) => {
+      console.error(`[paddle] handler failed: ${err.message}`);
+      sendJson(res, 500, { error: "internal error" });
+    });
+    return;
+  }
+
   if (urlPath === "/admin") {
     if (req.method === "POST") {
       handleAdminPost(req, res).catch(() => sendJson(res, 500, { error: "internal error" }));
@@ -1034,13 +1254,27 @@ const httpServer = http.createServer((req, res) => {
 fs.mkdirSync(path.join(root, "logs"), { recursive: true });
 sync.ensureAll(tenants);
 
+const retention = new Retention({
+  wacliBin: WACLI_BIN,
+  tenantsFile: TENANTS_FILE,
+  usage,
+  sync,
+  planFor,
+});
+retention.start();
+
 httpServer.listen(PORT, HOST, () => {
   console.log(`[wacli-me] http://${HOST}:${PORT} — MCP at /mcp — ${tenants.length} tenant(s)`);
   console.log(`[wacli-me] binary: ${WACLI_BIN}`);
+  console.log(`[wacli-me] retention: free stores pruned at ${PLANS.free.historyDays}d, removed after ${PLANS.free.idleDays}d idle`);
 });
 
 for (const signal of ["SIGINT", "SIGTERM"]) {
   process.on(signal, () => {
+    // Counts live in memory between flushes; losing a restart's worth of them
+    // would hand people free requests every deploy.
+    usage.flush();
+    retention.stop();
     httpServer.close(() => process.exit(0));
   });
 }

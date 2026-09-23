@@ -1,5 +1,13 @@
 /* wacli.me — one stylesheet for every page */
 
+/* Fonts are served from this origin, not from Google. A visitor's IP address
+   should not travel to a third party just to render a heading. Poppins and
+   JetBrains Mono are both SIL Open Font License 1.1; see /open-source. */
+@font-face{font-family:Poppins;font-style:normal;font-weight:400;font-display:swap;src:url(/poppins-400.woff2) format("woff2")}
+@font-face{font-family:Poppins;font-style:normal;font-weight:500;font-display:swap;src:url(/poppins-500.woff2) format("woff2")}
+@font-face{font-family:Poppins;font-style:normal;font-weight:600;font-display:swap;src:url(/poppins-600.woff2) format("woff2")}
+@font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:400 500;font-display:swap;src:url(/jetbrains-mono.woff2) format("woff2")}
+
 :root{
   --bg:#070c0a; --bg-soft:#0d1512; --bg-code:#050908; --line:#1b2723;
   --ink:#e8f2ed; --ink-dim:#93a79e; --ink-faint:#63756d;
@@ -48,6 +56,8 @@ h2{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-
 h3{font-size:17px;font-weight:600;letter-spacing:-.01em;margin:0 0 8px;color:var(--ink)}
 p{margin:0 0 14px;color:var(--ink-dim)}
 .lede{font-size:clamp(17px,2.2vw,20px);color:var(--ink-dim);margin:0 0 32px;max-width:60ch}
+.updated{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 32px}
+.lede+.updated{margin-top:-20px}
 ul{margin:0 0 16px;padding-left:20px;color:var(--ink-dim)}
 li{margin:0 0 8px}
 strong{color:var(--ink);font-weight:600}

@@ -5,7 +5,7 @@
 # the named tunnel keeps running so wacli.me never goes down for a deploy.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-host="${WACLI_ME_HOST:-wacli-vps}"
+host="${WACLI_ME_HOST:-wacli-host}"
 
 node scripts/build.mjs
 

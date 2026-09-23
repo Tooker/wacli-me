@@ -12,6 +12,9 @@ import { spawn } from "node:child_process";
 
 const QR_TTL_MS = 60_000; // WhatsApp invalidates a linking code after ~a minute
 const SESSION_TTL_MS = 6 * 60_000; // wacli gives up after five; leave a margin
+// Bump together with the version line on /dpa, never silently.
+export const DPA_VERSION = "1.0";
+
 const MAX_ACTIVE_SESSIONS = 3; // one machine, one CPU — do not spawn a crowd
 
 export class ConnectManager {
@@ -27,7 +30,7 @@ export class ConnectManager {
     return [...this.sessions.values()].filter((s) => s.status === "waiting").length;
   }
 
-  start({ allowSend = false } = {}) {
+  start({ allowSend = false, dpa = false } = {}) {
     if (this.activeCount >= MAX_ACTIVE_SESSIONS) {
       const err = new Error("Too many people are linking right now. Try again in a minute.");
       err.code = "BUSY";
@@ -56,6 +59,7 @@ export class ConnectManager {
       id,
       store,
       allowSend: allowSend === true,
+      dpa: dpa === true,
       proc,
       status: "waiting", // waiting | linked | failed | expired
       qr: null,
@@ -97,12 +101,13 @@ export class ConnectManager {
     return this.sessions.get(id);
   }
 
-  // The page starts a session on load, before the visitor has touched the
-  // send-permission checkbox. Let them change their mind while the QR is still
-  // on screen: the flag is only read when the pairing succeeds.
-  setAllowSend(session, allowSend) {
+  // The page starts a session on load, before the visitor has touched either
+  // checkbox. Let them change their mind while the QR is still on screen: both
+  // flags are only read when the pairing succeeds.
+  setPermissions(session, { allowSend, dpa }) {
     if (session.status !== "waiting") return false;
-    session.allowSend = allowSend === true;
+    if (allowSend !== undefined) session.allowSend = allowSend === true;
+    if (dpa !== undefined) session.dpa = dpa === true;
     this.#emit(session);
     return true;
   }
@@ -129,6 +134,7 @@ export class ConnectManager {
       expiresAt: session.qr ? session.qrAt + QR_TTL_MS : null,
       token: session.token,
       allowSend: session.allowSend,
+      dpa: session.dpa,
       error: session.error,
     };
   }
@@ -200,6 +206,10 @@ export class ConnectManager {
       token: session.token,
       store: session.store,
       allowSend: session.allowSend,
+      // Article 28(9) wants the agreement in writing, and electronic form
+      // counts. What makes it evidence is the timestamp and the version, so
+      // record both rather than a bare boolean.
+      dpa: session.dpa ? { version: DPA_VERSION, acceptedAt: new Date().toISOString() } : null,
       createdAt: new Date().toISOString(),
     });
     fs.writeFileSync(this.tenantsFile, JSON.stringify(tenants, null, 2), { mode: 0o600 });

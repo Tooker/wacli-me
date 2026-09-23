@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{title}}</title>
 <meta name="description" content="{{description}}">
-<meta name="robots" content="noindex">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 <meta property="og:title" content="{{ogtitle}}">
 <meta property="og:description" content="{{description}}">
 <meta property="og:type" content="website">
@@ -21,9 +21,8 @@
 <meta name="theme-color" content="#070c0a">
 <link rel="icon" href="/logo.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preload" href="/poppins-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/poppins-600.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/style.css">
 <link rel="canonical" href="{{canonical}}">
 {{jsonld}}
@@ -96,6 +95,7 @@
         <h4>Legal</h4>
         <a href="/privacy">Privacy</a>
         <a href="/terms">Terms</a>
+        <a href="/dpa">DPA</a>
         <a href="/imprint">Imprint</a>
         <a href="mailto:security@wacli.me">Report an issue</a>
       </div>

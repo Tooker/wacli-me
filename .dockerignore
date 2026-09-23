@@ -1,0 +1,10 @@
+docs/
+site/
+scripts/
+registry/
+config/
+stores/
+logs/
+.git/
+**/node_modules/
+*.local

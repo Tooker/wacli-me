@@ -1,0 +1,84 @@
+<!--meta {"title": "Data processing agreement — wacli.me", "description": "The Article 28 GDPR processing agreement for business use of wacli.me: scope, instructions, sub-processors, security measures and deletion."}-->
+<div class="hero">
+    <h1 class="page">Data processing agreement</h1>
+    <p class="lede">
+      If you link a WhatsApp account for anything other than purely private use, you are the
+      controller and we are your processor. Article 28 GDPR says that relationship needs a contract.
+      This is it.
+    </p>
+  <p class="updated">Version 1.0 — 23 September 2026</p>
+  </div>
+
+  <section>
+    <div class="prose">
+      <div class="note">
+        <p><strong>Do you need this?</strong> Not if the account is your own and you use it privately — that is the household exemption in Article 2(2)(c) GDPR, and no agreement is required. You need it the moment the account serves a business: a company number, a sole trader's work phone, a client-facing line. If in doubt, accept it; it costs nothing and binds us, not you.</p>
+      </div>
+
+      <h3>1. Parties and subject matter</h3>
+      <p>Controller is you, the person or company linking the account. Processor is {{provider_short}}. The subject matter is the hosted synchronisation, storage and retrieval of the WhatsApp message history of the account you link, so that MCP clients you authorise can read and — if you enable it — send messages.</p>
+      <p>This agreement supplements the <a href="/terms">Terms</a>. Where they conflict on data protection, this document wins.</p>
+
+      <h3>2. Duration</h3>
+      <p>It starts when you accept it and runs as long as an account of yours is linked. It ends when the last account is unlinked and the deletion in section 8 is complete.</p>
+
+      <h3>3. Nature and purpose, categories of data and data subjects</h3>
+      <ul>
+        <li><strong>Nature and purpose:</strong> storing a copy of an existing WhatsApp history and answering read queries against it; optionally sending messages on your instruction.</li>
+        <li><strong>Categories of personal data:</strong> message content, sender and recipient identifiers, phone numbers, display names, group and chat names, timestamps, media metadata, and media files when a tool downloads one. Special categories under Article 9 may occur incidentally, because we cannot control what people write to you.</li>
+        <li><strong>Categories of data subjects:</strong> you, and every person who has communicated with the linked account.</li>
+      </ul>
+
+      <h3>4. Instructions</h3>
+      <p>We process personal data only on your documented instructions. Your instructions are: this agreement, the Terms, the settings on your account, and the tool calls your MCP client makes. We do not process your data for any purpose of our own — no analysis, no profiling, no model training, no product statistics derived from content.</p>
+      <p>If we believe an instruction breaks data protection law, we will tell you and may suspend that instruction until it is resolved.</p>
+
+      <h3>5. Confidentiality</h3>
+      <p>Everyone with access is bound to confidentiality. At the time of writing that is one person: the operator named in the <a href="/imprint">Imprint</a>. If that changes, this section changes with it, and it is a material change under section 12.</p>
+
+      <h3>6. Security of processing (Article 32)</h3>
+      <p>The honest description, not a wish list:</p>
+      <ul>
+        <li><strong>Separation:</strong> one directory and one database per account. No shared message table, no cross-account queries, no join that could reach another customer's data.</li>
+        <li><strong>Access control:</strong> a bearer token or OAuth grant per account; the service port is bound to loopback and never exposed; the host is reachable only over SSH with a key, password login disabled, and a cloud firewall that drops everything else.</li>
+        <li><strong>Transport:</strong> TLS to the site and to the MCP endpoint; the connection to WhatsApp is the protocol's own encryption.</li>
+        <li><strong>Encryption at rest:</strong> <em>in progress.</em> Today the per-account store is not encrypted on disk and is protected by access control alone. We state this rather than imply otherwise; this section is updated when it ships, and that update is announced.</li>
+        <li><strong>Operator access:</strong> possible and unavoidable. A service that searches your messages must read them. Access happens for a fault you reported or a legal obligation under section 10, and for nothing else.</li>
+        <li><strong>Logging:</strong> that a request happened, which account and which tool — never content, never tool results.</li>
+        <li><strong>Availability:</strong> one server, no redundancy, no uptime guarantee. Plan accordingly; this is not a system of record.</li>
+      </ul>
+
+      <h3>7. Sub-processors</h3>
+      <p>You give general written authorisation for the sub-processors below. We tell you before adding or replacing one, with at least 30 days to object; if you object on reasonable data protection grounds and we cannot accommodate it, you may terminate and have your data deleted.</p>
+      <ul>
+        <li><strong>Hetzner Online GmbH</strong>, Gunzenhausen, Germany — hosting. Data stays in Nuremberg, Germany.</li>
+        <li><strong>Cloudflare, Inc.</strong>, USA — DNS and the tunnel publishing the site; sees connection metadata, not stored message content. Covered by Cloudflare's data processing addendum and EU standard contractual clauses.</li>
+        <li><strong>1337 Services GmbH (Njalla)</strong>, Nevis/Germany — the domain and inbound mail forwarding for the addresses on this site.</li>
+      </ul>
+      <p>Note what is <em>not</em> here: no analytics provider, no error tracker, no AI provider. When your client sends a tool result to a model, that is your client's transfer under your own controller relationship, not ours — see the <a href="/privacy">Privacy</a> page.</p>
+
+      <h3>8. Deletion and return</h3>
+      <p>Unlink an account, or write to <a href="mailto:privacy@wacli.me">privacy@wacli.me</a>, and the store and the account record are deleted within 30 days, backups included. Deletion is the default; we do not keep a copy unless law requires it, and no law we are aware of requires keeping message content.</p>
+      <p>You can export at any time through the read tools, which is the practical form of return — the data was always addressable by you.</p>
+      <p>Deletion also happens without being asked. On the Free plan a chat with no activity for 30 days is pruned, and an account with no request for 14 days is deleted entirely. That is storage limitation under Article 5(1)(e) doing its job, not a punishment for light use — and it is why the free tier can exist at all.</p>
+
+      <h3>9. Your rights as controller, our duties as processor</h3>
+      <ul>
+        <li>We assist you with requests from data subjects, and with impact assessments and prior consultations, as far as the nature of the processing allows.</li>
+        <li>We notify you without undue delay, and in any case within 48 hours, of a personal data breach affecting your data, with what we know and what we are doing.</li>
+        <li>We give you the information needed to demonstrate compliance. You may audit — in practice by asking questions in writing, which we answer, and by reading the source, which is public. An on-site audit is available on reasonable notice at your cost.</li>
+      </ul>
+
+      <h3>10. Disclosure to authorities</h3>
+      <p>We disclose only when legally compelled by a competent authority, and we tell you first unless the law forbids it. We have never received such a request.</p>
+
+      <h3>11. The other side of the conversation</h3>
+      <p>A practical warning rather than a clause. The people who wrote to you never agreed to any of this, and for them <em>you</em> are the controller. Whether you may keep and process that history — and whether you owe them information under Article 13 or 14 — is your call to make, not ours. We can only make sure the handling on our side is clean.</p>
+
+      <h3>12. Changes</h3>
+      <p>Material changes are announced to the contact address on your account at least 30 days before they take effect. The version and date at the top identify the text you accepted; superseded versions are available on request.</p>
+
+      <h3>13. Accepting it</h3>
+      <p>Accept it when linking an account, or by writing to <a href="mailto:privacy@wacli.me">privacy@wacli.me</a> from the address on your account. Article 28(9) requires written form, and electronic form counts — no signature, no PDF and no scanner are needed. If your organisation nevertheless needs a signed copy for its files, ask and you get one.</p>
+    </div>
+  </section>

@@ -5,6 +5,7 @@
   var idle = document.getElementById("qr-idle");
   var startBtn = document.getElementById("start");
   var allowSend = document.getElementById("allow-send");
+  var acceptDpa = document.getElementById("accept-dpa");
   var countdown = document.getElementById("countdown");
   var secsEl = document.getElementById("secs");
   var stateEl = document.getElementById("state");
@@ -114,6 +115,7 @@
   function showToken(token) {
     startBtn.hidden = true;
     allowSend.parentElement.hidden = true;
+    if (acceptDpa) acceptDpa.parentElement.hidden = true;
     tokenOut.textContent = token;
     cmdClaude.innerHTML = cmdClaude.innerHTML.replace("&lt;token&gt;", token);
     result.classList.add("on");
@@ -136,7 +138,7 @@
     fetch("/api/connect/start", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ allowSend: allowSend.checked }),
+      body: JSON.stringify({ allowSend: allowSend.checked, dpa: !!(acceptDpa && acceptDpa.checked) }),
     })
       .then(function (r) {
         return r.json().then(function (body) {
@@ -169,16 +171,27 @@
 
   // The QR is already on screen by the time anyone reads the checkbox, so the
   // choice travels separately. The server only reads it when WhatsApp confirms.
-  allowSend.addEventListener("change", function () {
+  function sendPermission(patch) {
     if (!sessionId) return;
+    patch.session = sessionId;
     fetch("/api/connect/permissions", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ session: sessionId, allowSend: allowSend.checked }),
+      body: JSON.stringify(patch),
     }).catch(function () {
       /* the value is re-sent on the next toggle; nothing to undo here */
     });
+  }
+
+  allowSend.addEventListener("change", function () {
+    sendPermission({ allowSend: allowSend.checked });
   });
+
+  if (acceptDpa) {
+    acceptDpa.addEventListener("change", function () {
+      sendPermission({ dpa: acceptDpa.checked });
+    });
+  }
 
   // An abandoned tab holds one of very few linking slots. Hand it back.
   window.addEventListener("pagehide", function () {
