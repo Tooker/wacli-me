@@ -68,6 +68,10 @@ Environment:
 | `WACLI_BIN`         | `./bin/wacli`        | wacli binary                 |
 | `WACLI_ME_TENANTS`  | `./config/tenants.json` | tenant file               |
 
+For a private connection from ChatGPT through the OpenAI Secure MCP Tunnel,
+see [the Docker setup guide](docs/docker-openai-tunnel.en.md). The tunnel
+deployment keeps the MCP port off the public network.
+
 ## Linking an account
 
 ```bash
