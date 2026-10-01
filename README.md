@@ -90,6 +90,10 @@ presence may help the primary phone keep receiving push notifications, but
 WhatsApp controls notification routing, so this cannot be guaranteed. Set
 `WACLI_SYNC_MODE=continuous` to keep syncing in the background instead.
 
+For a private connection from ChatGPT through the OpenAI Secure MCP Tunnel,
+see [the Docker setup guide](docs/docker-openai-tunnel.en.md). The tunnel
+deployment keeps the MCP port off the public network.
+
 ## Linking an account
 
 ```bash
