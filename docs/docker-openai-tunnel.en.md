@@ -84,7 +84,29 @@ public MCP address is needed.
 
 ## Operation
 
-Recreate the tunnel container after changing `.env`:
+### WhatsApp connection and push notifications
+
+The Docker setup defaults to `WACLI_SYNC_MODE=on-request`. The WhatsApp
+connection starts only for an MCP tool call. Before replying, wacli catches up
+the offline backlog and updates the local search index. The linked session uses
+`quiet` presence while connected, so it does not announce itself as available.
+After the last call, it disconnects after `WACLI_SYNC_IDLE_MS` (5 seconds by
+default). The first call after a pause can take longer.
+
+Set `WACLI_SYNC_IDLE_MS=0` in `.env` to disconnect as soon as each response
+finishes. Set `WACLI_SYNC_MODE=continuous` for continuous synchronization; the
+WhatsApp presence stays `quiet` in that mode too. WhatsApp controls iPhone
+notification routing; quiet presence reduces the risk but cannot guarantee the
+same behavior on every platform.
+
+Apply changes to `WACLI_SYNC_MODE` or `WACLI_SYNC_IDLE_MS` by rebuilding the
+local server:
+
+```bash
+docker compose -f docker-compose.tunnel.yml up -d --build wacli-me
+```
+
+After changing the OpenAI tunnel entries, recreate the tunnel client:
 
 ```bash
 docker compose -f docker-compose.tunnel.yml up -d --force-recreate tunnel-client
