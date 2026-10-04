@@ -39,7 +39,7 @@ scripts/     start/stop/tunnel helpers
 ```json
 {
   "tenants": [
-    { "id": "demo", "token": "<32 random bytes, hex>", "store": "/Users/<user>/wacli-me/stores/demo", "allowSend": false }
+    { "id": "demo", "token": "<32 random bytes, hex>", "store": "/Users/<user>/wacli-me/stores/demo", "plan": "self-hosted", "allowSend": false }
   ]
 }
 ```
@@ -50,6 +50,13 @@ other's data. `allowSend` is what registers the `send_message` tool at all; leav
 the account owner explicitly asked for write access.
 
 Generate a token with `openssl rand -hex 32`.
+
+For a server you operate yourself, use `"plan": "self-hosted"` as in the
+example. It has no monthly tool-call limit and does not prune message history
+or delete an inactive tenant; you are responsible for store retention and
+backups. If `plan` is omitted or unrecognized, the server uses Free: 50
+tool calls per UTC month, 30 days of history, and deletion after 14 days of
+inactivity. Pro is the paid hosted plan and is not needed for self-hosting.
 
 ## Running
 
