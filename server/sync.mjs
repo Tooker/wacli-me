@@ -2,11 +2,17 @@
 // for MCP tool calls and stopped shortly after the last request.
 
 import fs from "node:fs";
+import net from "node:net";
+import path from "node:path";
 import { spawn } from "node:child_process";
 
 const RESTART_DELAY_MS = 10_000;
 const MAX_BACKOFF_MS = 5 * 60_000;
 const REQUEST_READY_TIMEOUT_MS = 90_000;
+// wacli 0.18.2 opens this socket only after it has acquired the store and
+// finished its post-connect setup; offline_sync_completed may arrive earlier.
+const SEND_DELEGATE_SOCKET = ".send.sock";
+const SEND_DELEGATE_POLL_MS = 25;
 
 export class SyncManager {
   constructor({ wacliBin, logDir, mode = "on-request", idleMs = 5_000 }) {
@@ -15,6 +21,7 @@ export class SyncManager {
     this.mode = mode === "on-request" ? "on-request" : "continuous";
     this.idleMs = Number.isFinite(idleMs) ? Math.max(0, idleMs) : 5_000;
     this.running = new Map(); // store path -> process/session state
+    this.requestTails = new Map(); // store path -> serialized MCP tool requests
   }
 
   ensure(store) {
@@ -25,29 +32,38 @@ export class SyncManager {
 
   /** Start a quiet session for a tool request and return a release callback. */
   async acquireForRequest(store) {
-    if (this.mode !== "on-request") return () => {};
-    if (!fs.existsSync(store)) throw new Error("WhatsApp account store is missing.");
-
-    let entry = this.running.get(store);
-    if (!entry) {
-      entry = this.#newRequestEntry();
-      this.running.set(store, entry);
-      this.#spawn(store, RESTART_DELAY_MS, entry);
-    }
-
-    if (entry.idleTimer) {
-      clearTimeout(entry.idleTimer);
-      entry.idleTimer = null;
-    }
-    entry.activeRequests += 1;
+    const releaseSlot = await this.#acquireRequestSlot(store);
+    if (this.mode !== "on-request") return releaseSlot;
+    let entry = null;
+    let requestCounted = false;
 
     try {
+      if (!fs.existsSync(store)) throw new Error("WhatsApp account store is missing.");
+
+      entry = this.running.get(store);
+      if (!entry) {
+        entry = this.#newRequestEntry(store);
+        this.running.set(store, entry);
+        this.#spawn(store, RESTART_DELAY_MS, entry);
+      }
+
+      if (entry.idleTimer) {
+        clearTimeout(entry.idleTimer);
+        entry.idleTimer = null;
+      }
+      entry.activeRequests += 1;
+      requestCounted = true;
+
       // Wait until wacli has replayed the offline backlog so this request sees
-      // the newest local mirror. The MCP call owns this connection while it
-      // waits and while its tool handler is running.
+      // the newest local mirror. The replay event can arrive before wacli has
+      // finished its post-connect setup, so also wait for its send delegate
+      // socket before allowing a command to run against the locked store.
       await entry.ready;
+      await this.#waitForSendDelegate(store, entry);
     } catch (err) {
-      this.#releaseRequest(store, entry, true);
+      if (entry && requestCounted) this.#releaseRequest(store, entry, true);
+      else if (entry && this.running.get(store) === entry) this.stop(store);
+      releaseSlot();
       throw err;
     }
 
@@ -56,6 +72,7 @@ export class SyncManager {
       if (released) return;
       released = true;
       this.#releaseRequest(store, entry);
+      releaseSlot();
     };
   }
 
@@ -88,7 +105,7 @@ export class SyncManager {
     }));
   }
 
-  #newRequestEntry() {
+  #newRequestEntry(store) {
     let resolve;
     let reject;
     const entry = {
@@ -121,6 +138,59 @@ export class SyncManager {
       REQUEST_READY_TIMEOUT_MS,
     );
     return entry;
+  }
+
+  async #acquireRequestSlot(store) {
+    const previous = this.requestTails.get(store) || Promise.resolve();
+    let unlock;
+    const current = new Promise((resolve) => {
+      unlock = resolve;
+    });
+    const tail = previous.catch(() => {}).then(() => current);
+    this.requestTails.set(store, tail);
+    await previous.catch(() => {});
+
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      unlock();
+      if (this.requestTails.get(store) === tail) this.requestTails.delete(store);
+    };
+  }
+
+  async #waitForSendDelegate(store, entry) {
+    const socket = path.join(store, SEND_DELEGATE_SOCKET);
+    const deadline = Date.now() + REQUEST_READY_TIMEOUT_MS;
+    while (Date.now() < deadline) {
+      if (this.running.get(store) !== entry || entry.stopping || entry.proc?.exitCode !== null) {
+        throw new Error("WhatsApp sync exited before its send handler was ready.");
+      }
+      try {
+        const info = fs.lstatSync(socket);
+        if (info.isSocket() && (await this.#canConnectToSocket(socket))) return;
+      } catch {
+        // The delegate starts after connection and app-state setup.
+      }
+      await new Promise((resolve) => setTimeout(resolve, SEND_DELEGATE_POLL_MS));
+    }
+    throw new Error("Timed out waiting for WhatsApp send handler.");
+  }
+
+  #canConnectToSocket(socket) {
+    return new Promise((resolve) => {
+      const client = net.createConnection(socket);
+      let settled = false;
+      const finish = (connected) => {
+        if (settled) return;
+        settled = true;
+        client.destroy();
+        resolve(connected);
+      };
+      client.once("connect", () => finish(true));
+      client.once("error", () => finish(false));
+      client.setTimeout(SEND_DELEGATE_POLL_MS, () => finish(false));
+    });
   }
 
   #releaseRequest(store, entry, immediate = false) {
