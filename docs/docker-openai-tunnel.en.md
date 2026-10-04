@@ -8,7 +8,8 @@ publicly reachable.
 The tunnel is bound to one wacli.me tenant. The tunnel client supplies that
 tenant's bearer token internally before calling the MCP server.
 The Compose file pins the official tunnel-client image to version `v0.0.15`
-and its image digest.
+and its image digest. For current product and network requirements, see the
+[official OpenAI Secure MCP Tunnel guide](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels).
 
 ## 1. Create the local configuration
 
@@ -52,6 +53,11 @@ Set that tenant's token as `WACLI_ME_TENANT_TOKEN` in `.env`. Keep the same
 value in `config/tenants.json`. Set `allowSend` to `true` there only if the MCP
 server should be allowed to send messages.
 
+The Compose setup defaults `WACLI_ME_DEFAULT_PLAN` to `self-hosted`, so this
+new tenant does not inherit the hosted Free request cap. Self-hosted tenants
+keep their history and are not deleted for inactivity; manage storage and
+retention on this machine.
+
 ## 3. Configure the OpenAI tunnel
 
 Create a tunnel in
@@ -84,7 +90,29 @@ public MCP address is needed.
 
 ## Operation
 
-Recreate the tunnel container after changing `.env`:
+### WhatsApp connection and push notifications
+
+The Docker setup defaults to `WACLI_SYNC_MODE=on-request`. The WhatsApp
+connection starts only for an MCP tool call. Before replying, wacli catches up
+the offline backlog and updates the local search index. The linked session uses
+`quiet` presence while connected, so it does not announce itself as available.
+After the last call, it disconnects after `WACLI_SYNC_IDLE_MS` (5 seconds by
+default). The first call after a pause can take longer.
+
+Set `WACLI_SYNC_IDLE_MS=0` in `.env` to disconnect as soon as each response
+finishes. Set `WACLI_SYNC_MODE=continuous` for continuous synchronization; the
+WhatsApp presence stays `quiet` in that mode too. WhatsApp controls iPhone
+notification routing; quiet presence reduces the risk but cannot guarantee the
+same behavior on every platform.
+
+Apply changes to `WACLI_SYNC_MODE` or `WACLI_SYNC_IDLE_MS` by rebuilding the
+local server:
+
+```bash
+docker compose -f docker-compose.tunnel.yml up -d --build wacli-me
+```
+
+After changing the OpenAI tunnel entries, recreate the tunnel client:
 
 ```bash
 docker compose -f docker-compose.tunnel.yml up -d --force-recreate tunnel-client

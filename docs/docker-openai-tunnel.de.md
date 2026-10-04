@@ -8,7 +8,8 @@ ist nicht öffentlich erreichbar.
 Der Tunnel wird an genau einen wacli.me-Mandanten gebunden. Der Tunnel-Client
 setzt dessen Bearer-Token intern, bevor er den MCP-Server aufruft.
 Die Compose-Datei verwendet das offizielle Tunnel-Client-Image, gepinnt auf
-Version `v0.0.15` und seinen Image-Digest.
+Version `v0.0.15` und seinen Image-Digest. Aktuelle Produkt- und Netzwerkanforderungen
+stehen in der [offiziellen OpenAI-Dokumentation zum Secure MCP Tunnel](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels).
 
 ## 1. Lokale Konfiguration anlegen
 
@@ -53,6 +54,11 @@ legt den Mandanten und dessen zufälligen Token in `config/tenants.json` an.
 Bewahre denselben Wert in `config/tenants.json` auf. Aktiviere `allowSend` dort
 nur, wenn der MCP-Server auch Nachrichten senden dürfen soll.
 
+Diese Compose-Konfiguration setzt `WACLI_ME_DEFAULT_PLAN` standardmäßig auf
+`self-hosted`; der neue Mandant erhält damit nicht das gehostete Free-Limit.
+Self-hosted-Mandanten behalten ihre Historie und werden bei Inaktivität nicht
+gelöscht. Verwalte Speicherplatz und Aufbewahrung auf diesem Rechner selbst.
+
 ## 3. OpenAI-Tunnel eintragen
 
 Erstelle einen Tunnel in den
@@ -85,7 +91,29 @@ eingehenden Firewall-Regeln oder öffentliche MCP-Adresse nötig.
 
 ## Betrieb
 
-Änderungen an `.env` werden nach dem Neuerstellen des Tunnel-Containers aktiv:
+### WhatsApp-Verbindung und Push-Mitteilungen
+
+Der Docker-Aufbau verwendet standardmäßig `WACLI_SYNC_MODE=on-request`.
+Die WhatsApp-Verbindung startet erst bei einem MCP-Tool-Aufruf. Vor der
+Antwort holt wacli den Offline-Rückstand ab und aktualisiert den lokalen
+Suchindex. Währenddessen verwendet die verknüpfte Sitzung den `quiet`-Status,
+der kein „available“ sendet. Nach dem letzten Aufruf trennt sie sich nach
+`WACLI_SYNC_IDLE_MS` (standardmäßig 5 Sekunden). Der erste Aufruf nach einer
+Pause kann daher etwas länger dauern.
+
+Setze in `.env` `WACLI_SYNC_IDLE_MS=0`, wenn direkt nach jeder Antwort getrennt
+werden soll. Für dauerhafte Synchronisierung setze `WACLI_SYNC_MODE=continuous`;
+auch dann bleibt der WhatsApp-Status auf `quiet`. WhatsApp entscheidet selbst,
+wie Benachrichtigungen auf dem iPhone zugestellt werden; `quiet` reduziert das
+Risiko, kann das Verhalten aber nicht für jede Plattform garantieren.
+
+Änderungen an `WACLI_SYNC_MODE` oder `WACLI_SYNC_IDLE_MS` werden so aktiv:
+
+```bash
+docker compose -f docker-compose.tunnel.yml up -d --build wacli-me
+```
+
+Nach Änderungen an den OpenAI-Tunnel-Einträgen den Tunnel-Client neu erstellen:
 
 ```bash
 docker compose -f docker-compose.tunnel.yml up -d --force-recreate tunnel-client

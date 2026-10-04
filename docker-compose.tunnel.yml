@@ -13,6 +13,9 @@ services:
       WACLI_BIN: /app/bin/wacli
       WACLI_ME_TENANTS: /app/config/tenants.json
       WACLI_ME_STORES: /app/stores
+      WACLI_ME_DEFAULT_PLAN: ${WACLI_ME_DEFAULT_PLAN:-self-hosted}
+      WACLI_SYNC_MODE: ${WACLI_SYNC_MODE:-on-request}
+      WACLI_SYNC_IDLE_MS: ${WACLI_SYNC_IDLE_MS:-5000}
     ports:
       - "127.0.0.1:${WACLI_ME_LOCAL_PORT:-8787}:8787"
     volumes:
