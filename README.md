@@ -46,8 +46,10 @@ scripts/     start/stop/tunnel helpers
 
 The file is re-read every 5 seconds — adding a tenant needs no restart. A token maps to exactly one
 store directory; tools are constructed per request against that store, so two tenants cannot see each
-other's data. `allowSend` is what registers the `send_message` tool at all; leave it `false` unless
-the account owner explicitly asked for write access.
+other's data. `allowSend` registers `send_message`, `send_image`, and the other live/write tools;
+leave it `false` unless the account owner explicitly asked for write access. `send_image` accepts
+JPEG, PNG, WebP, and GIF bytes as base64 or a public HTTPS image URL (up to 5 MB). `get_media`
+returns synced images as MCP image content when they are up to 5 MB.
 
 Generate a token with `openssl rand -hex 32`.
 

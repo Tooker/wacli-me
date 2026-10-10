@@ -185,12 +185,20 @@ export class Wacli {
   downloadMedia({ chat, id, outputDir }) {
     return this.runJson(
       ["media", "download", "--chat", chat, "--id", id, "--output", outputDir],
-      { readOnly: false },
+      // An explicit output path lets wacli fetch media without opening the
+      // writable store, so get_media works while sync holds the store lock.
+      { readOnly: true },
     );
   }
 
   sendText({ to, message }) {
     return this.runJson(["send", "text", "--to", to, "--message", message], { readOnly: false });
+  }
+
+  sendImage({ to, file, mimeType, caption }) {
+    const args = ["send", "file", "--to", to, "--file", file, "--mime", mimeType, "--as", "image"];
+    if (caption) args.push("--caption", caption);
+    return this.runJson(args, { readOnly: false });
   }
 
   react({ to, id, reaction, sender }) {
